@@ -2,7 +2,7 @@ from backend.rag_engine.vector_store import RAGVectorStore
 
 # In debug_rag.py
 store = RAGVectorStore(
-    persist_directory="backend/rag_engine/chroma_db_base",
+    persist_directory="backend/rag_engine/chroma_db",
     model_name="BAAI/bge-base-en-v1.5"
 )
 store.ingest_all_corpora()
