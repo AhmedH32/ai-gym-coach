@@ -276,7 +276,7 @@ def main():
         cleaned.append(result)
 
     print(f"Cleaned exercises: {len(cleaned)}")
-    print(f"Skipped:")
+    print("Skipped:")
     for reason, count in skipped_reasons.items():
         if count > 0:
             print(f"  {reason}: {count}")

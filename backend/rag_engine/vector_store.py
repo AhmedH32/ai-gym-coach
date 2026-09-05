@@ -6,7 +6,6 @@ import time
 from typing import Any
 
 import chromadb
-import numpy as np
 from sentence_transformers import SentenceTransformer
 
 
