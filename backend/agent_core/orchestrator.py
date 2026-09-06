@@ -183,9 +183,9 @@ class GymCoachOrchestrator:
         project_root: Optional[Path] = None,
         rag_tools: Optional[ClinicalRAGTools] = None
     ):
-        self.vllm_base_url = vllm_base_url.rstrip("/")
-        self.adapter_model = adapter_model_name
-        self.base_model = base_model_name
+        self.vllm_base_url = os.environ.get("VLLM_BASE_URL", vllm_base_url).rstrip("/")
+        self.adapter_model = os.environ.get("ADAPTER_NAME", adapter_model_name)
+        self.base_model = os.environ.get("BASE_MODEL_NAME", base_model_name)
 
         # Detect Project Root (assumes orchestrator is at backend/agent_core/)
         if project_root is None:
@@ -205,7 +205,8 @@ class GymCoachOrchestrator:
         if exercises_path.exists():
             with open(exercises_path, "r", encoding="utf-8") as f:
                 raw_exercises = json.load(f)
-                for ex in raw_exercises:
+                exercises_list = raw_exercises if isinstance(raw_exercises, list) else raw_exercises.get("exercises", [])
+                for ex in exercises_list:
                     self.catalog_lookup[ex["id"]] = ex
             print(f"✓ Orchestrator indexed {len(self.catalog_lookup)} catalog exercises.")
         else:
@@ -255,19 +256,24 @@ class GymCoachOrchestrator:
         model: str,
         messages: List[Dict[str, str]],
         temperature: float = 0.0,
-        max_tokens: int = 512
+        max_tokens: Optional[int] = 2048
     ) -> str:
         url = f"{self.vllm_base_url}/chat/completions"
         payload = {
             "model": model,
             "messages": messages,
             "temperature": temperature,
-            "max_tokens": max_tokens,
             "stream": False
         }
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        if max_tokens is not None:
+            payload["max_tokens"] = max_tokens
+
+        async with httpx.AsyncClient(timeout=120.0) as client:
             resp = await client.post(url, json=payload)
-            resp.raise_for_status()
+            if resp.status_code != 200:
+                raise RuntimeError(
+                    f"vLLM API rejected request [HTTP {resp.status_code}]: {resp.text}"
+                )
             data = resp.json()
             return data["choices"][0]["message"]["content"].strip()
 
@@ -401,10 +407,28 @@ class GymCoachOrchestrator:
                 exclude_mechanics=exclude
             )
 
-            candidate_list = [
-                {"catalogId": item["id"], "name": item["name"], "equipment": item.get("equipment", "")}
-                for item in catalog_results[:10]
-            ]
+            # Safely handle both dict and list returns from search_exercise_catalog
+            if isinstance(catalog_results, dict):
+                matched_ids = catalog_results.get("matched_ids", [])
+                candidate_list = [
+                    {
+                        "catalogId": cid,
+                        "name": self.catalog_lookup.get(cid, {}).get("name", cid),
+                        "equipment": self.catalog_lookup.get(cid, {}).get("equipment", "")
+                    }
+                    for cid in matched_ids[:10]
+                ]
+            elif isinstance(catalog_results, list):
+                candidate_list = [
+                    {
+                        "catalogId": item.get("id", item.get("catalogId", "")),
+                        "name": item.get("name", ""),
+                        "equipment": item.get("equipment", "")
+                    }
+                    for item in catalog_results[:10]
+                ]
+            else:
+                candidate_list = []
 
             context_prompt = (
                 f"Catalog Search Results:\n"
@@ -435,7 +459,7 @@ class GymCoachOrchestrator:
             model=self.base_model,
             messages=pass2_messages,
             temperature=0.2,
-            max_tokens=700
+            max_tokens=2048
         )
 
         chat_text, proposal = self._parse_synthesis_output(pass2_output)
