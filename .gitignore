@@ -14,6 +14,7 @@ backend/.env
 
 # Vector Stores & Local Databases
 backend/chroma_db/
+backend/rag_engine/chroma_db_*/
 backend/*.faiss
 backend/*.pkl
 rag_corpus/raw_downloads/
@@ -29,3 +30,11 @@ ml_pipeline/weights/
 .DS_Store
 .vscode/
 .idea/
+
+# LoRA Weights & checkpoints
+ml_pipeline/qwen2.5_gym_adapter/*.safetensors
+ml_pipeline/qwen2.5_gym_adapter/*.bin
+ml_pipeline/qwen2.5_gym_adapter/*.pt
+ml_pipeline/qwen2.5_gym_adapter/*
+checkpoints/
+*.safetensors

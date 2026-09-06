@@ -1,4 +1,3 @@
-import pytest
 from backend.analytics_engine.recovery import AnalyticsEngine
 
 
