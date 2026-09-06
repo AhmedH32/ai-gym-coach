@@ -38,3 +38,4 @@ ml_pipeline/qwen2.5_gym_adapter/*.pt
 ml_pipeline/qwen2.5_gym_adapter/*
 checkpoints/
 *.safetensors
+client/.expo/
