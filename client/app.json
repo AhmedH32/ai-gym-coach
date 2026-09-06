@@ -1,0 +1,10 @@
+{
+  "expo": {
+    "name": "AI Gym Coach Preview",
+    "slug": "ai-gym-coach-preview",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": ["**/*"]
+  }
+}
