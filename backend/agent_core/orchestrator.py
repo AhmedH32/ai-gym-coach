@@ -8,7 +8,14 @@ from typing import Dict, Any, List, Optional, Tuple
 import httpx
 from pydantic import BaseModel, Field
 
-from backend.rag_engine.tools import ClinicalRAGTools
+# Support flexible project layouts
+try:
+    from backend.rag_engine.tools import ClinicalRAGTools
+except ImportError:
+    try:
+        from backend.agent_core.rag_engine.clinical_rag import ClinicalRAGTools
+    except ImportError:
+        from backend.agent_core.rag_engine.tools import ClinicalRAGTools
 
 # ------------------------------------------------------------------------------
 # 1. Pydantic Schemas for Dual-Payload Contract
@@ -25,11 +32,13 @@ class WorkoutItem(BaseModel):
     customInstructions: Optional[List[str]] = Field(default_factory=list)
     coachingCue: Optional[str] = Field(default="")
 
+
 class WorkoutProposal(BaseModel):
     title: str
     targetFocus: str
     estimatedMinutes: int = Field(default=45)
     items: List[WorkoutItem]
+
 
 class OrchestratorResponse(BaseModel):
     routing_class: str
@@ -46,57 +55,61 @@ ROUTER_SYSTEM_PROMPT = (
     "You are an elite Gym Coach AI. You manage user programming, injuries, and progressive overload. "
     "You have access to tools: 'search_medical_db(query)', 'search_exercise_catalog(muscle, equipment, exclude_mechanics)', "
     "and 'generate_workout(workout_json)'.\n\n"
+    "CRITICAL PRECEDENCE RULE - MEDICAL FIRST:\n"
+    "If the athlete mentions ANY pain, sharp sensations, tendon irritation, joint ache, tweak, or injury symptoms—"
+    "EVEN IF THEY ASK TO TRAIN, SUBSTITUTE EXERCISES, OR LIST SPECIFIC EQUIPMENT IN THE SAME SENTENCE—"
+    "you MUST call 'search_medical_db'. Medical safety takes absolute priority over exercise selection or catalog search.\n\n"
     "ROUTING RULES:\n"
-    "1. Orthopedic Injuries & Joint/Tendon Pathology: If the user reports physical joint pain, tendon irritation, or acute musculoskeletal symptoms, "
-    "you MUST output a tool call to 'search_medical_db' in strict JSON format.\n"
-    "2. Periodization, Plateaus & Fatigue: For lifting stalls (e.g., 5x5 plateaus), high fatigue, DOMS, deloads, or volume management, "
-    "reason directly from your internal training principles. Respond with direct coaching text WITHOUT calling medical tools.\n"
-    "3. Exercise Selection: If specific exercise movements matching equipment or negative constraints are required, call 'search_exercise_catalog'.\n"
-    "4. Technique & General Coaching: Respond with direct coaching text without tools."
+    "1. Orthopedic Injuries & Musculoskeletal Pathology: Physical discomfort, joint/tendon irritation, acute pain -> MUST call 'search_medical_db'.\n"
+    "2. Periodization, Plateaus & Fatigue: Lifting stalls, deloads, fatigue management, DOMS -> Respond directly with coaching text (no tools).\n"
+    "3. Exercise Selection (Pain-Free Only): Requesting exercise options matching equipment or mechanics when NO pain is reported -> Call 'search_exercise_catalog'.\n"
+    "4. Technique & General Coaching: General lifting form, warm-ups, or cues without pain -> Respond directly with coaching text (no tools)."
 )
+
 
 def load_periodization_corpus(project_root: Path) -> str:
     """Dynamically loads and concatenates the 5 periodization markdown docs for Radix caching."""
     periodization_dir = project_root / "prompt_assets" / "periodization"
     if not periodization_dir.exists():
         return ""
-    
+
     docs = []
     for md_file in sorted(periodization_dir.glob("*.md")):
         try:
             docs.append(f"### {md_file.stem.replace('_', ' ').title()}\n{md_file.read_text(encoding='utf-8')}")
         except Exception as e:
             print(f"Warning: Failed to read {md_file}: {e}")
-            
+
     return "\n\n".join(docs)
 
 
 CONTRASTIVE_FEW_SHOTS = [
-    # Positive Anchor: Injury + Wants to Train -> Emits Markdown + Delimited JSON
+    # Positive Anchor: Injury + Wants to Train -> Emits Markdown + Delimited JSON (Custom rehab items, no catalog IDs)
     {
         "role": "user",
         "content": (
             "Clinical Reference Data:\n"
             "Condition: Patellar Tendinopathy (Jumper's Knee)\n"
-            "Contraindicated Mechanics: Deep knee flexion past 90 degrees under load, forward knee shear.\n"
+            "Contraindicated Mechanics: Deep knee flexion past 90 degrees under load, forward knee shear, plyometrics, jumping.\n"
             "Acute Rehab Protocol: Spanish Squat Isometric Hold: 5 sets x 45s.\n"
-            "Candidate Catalog Exercises:\n"
-            "- ID: Leg_Press | Name: Leg Press | Equipment: Machine\n"
-            "- ID: Seated_Leg_Curl | Name: Seated Leg Curl | Equipment: Machine\n\n"
-            "Athlete Query: 'Tendon below my kneecap is barking on deep squats. Can I still get a leg workout using machines today?'"
+            "Clinical Safe Alternatives:\n"
+            "- Spanish Squat Isometric Hold\n"
+            "- Dumbbell Romanian Deadlift (Hip Hinge Focus)\n"
+            "- Seated Dumbbell Leg Extension Isometric (45-60 deg)\n\n"
+            "Athlete Query: 'Tendon below my kneecap is barking on deep squats, but I have dumbbells. Can I still get a leg workout in today?'"
         )
     },
     {
         "role": "assistant",
         "content": (
             "Your patellar tendon is reacting to high compressive and shear forces at deep knee flexion angles. "
-            "We are pulling out free-weight back squats today and switching to movements that maintain a vertical tibia.\n\n"
-            "We will begin with isometric Spanish squats to desensitize the patellar tendon, followed by high-and-wide foot placement "
-            "on the leg press to train knee extension without anterior translation.\n\n"
+            "We are completely pulling out deep free-weight squats and all jumping/plyometrics today to give the extensor mechanism a rest.\n\n"
+            "Instead, we will perform a specialized clinical routine: desensitizing the tendon with isometric quad loading, "
+            "then loading the posterior chain via hip hinges with your dumbbells where the tibia stays vertical.\n\n"
             "<!-- WORKOUT_PAYLOAD_START -->\n"
             "{\n"
-            '  "title": "Patellar-Sparing Lower Body Session",\n'
-            '  "targetFocus": "Quads & Hamstrings",\n'
+            '  "title": "Patellar-Sparing Dumbbell Session",\n'
+            '  "targetFocus": "Lower Body (Tendon Rehab Focus)",\n'
             '  "estimatedMinutes": 40,\n'
             '  "items": [\n'
             "    {\n"
@@ -109,35 +122,42 @@ CONTRASTIVE_FEW_SHOTS = [
             '      "targetRpe": 6,\n'
             '      "tempo": "Static",\n'
             '      "customInstructions": [\n'
-            '        "Anchor a heavy resistance band around a rig behind both knees.",\n'
-            '        "Squat to approximately 60-70 degrees of knee flexion, maintaining a vertical shin angle.",\n'
-            '        "Hold statically against band tension."\n'
+            '        "Loop a heavy resistance band or towel behind both knees anchored to a secure post.",\n'
+            '        "Squat to approximately 60 degrees of knee flexion, maintaining a vertical shin angle.",\n'
+            '        "Hold statically against the tension while keeping quads engaged."\n'
             "      ],\n"
-            '      "coachingCue": "Maintain continuous quadriceps tension without letting the knees track forward."\n'
+            '      "coachingCue": "Maintain constant quad tension without letting the knees migrate forward over toes."\n'
             "    },\n"
             "    {\n"
-            '      "name": "Leg Press",\n'
-            '      "existsInCatalog": true,\n'
-            '      "catalogId": "Leg_Press",\n'
+            '      "name": "Dumbbell Romanian Deadlift",\n'
+            '      "existsInCatalog": false,\n'
+            '      "catalogId": null,\n'
             '      "category": "compound",\n'
             '      "sets": 3,\n'
             '      "reps": "10-12",\n'
             '      "targetRpe": 7,\n'
             '      "tempo": "3-0-1-0",\n'
-            '      "customInstructions": [],\n'
-            '      "coachingCue": "Place feet high and wide on the platform to shift load into the posterior chain and minimize forward shear."\n'
+            '      "customInstructions": [\n'
+            '        "Hold dumbbells in front of thighs with soft, unlocked knees.",\n'
+            '        "Push hips straight back toward the wall behind you with minimal additional knee flexion.",\n'
+            '        "Hinge until hamstrings are fully loaded, then squeeze glutes to stand."\n'
+            "      ],\n"
+            '      "coachingCue": "Keep the tibia vertical. The movement happens at the hips, sparing the patellar tendon."\n'
             "    },\n"
             "    {\n"
-            '      "name": "Seated Leg Curl",\n'
-            '      "existsInCatalog": true,\n'
-            '      "catalogId": "Seated_Leg_Curl",\n'
+            '      "name": "Dumbbell Glute Bridge",\n'
+            '      "existsInCatalog": false,\n'
+            '      "catalogId": null,\n'
             '      "category": "accessory",\n'
             '      "sets": 3,\n'
             '      "reps": "12-15",\n'
-            '      "targetRpe": 8,\n'
-            '      "tempo": "3-0-1-0",\n'
-            '      "customInstructions": [],\n'
-            '      "coachingCue": "Strict 3-second eccentric on every repetition to strengthen the knee flexors."\n'
+            '      "targetRpe": 7,\n'
+            '      "tempo": "2-0-1-1",\n'
+            '      "customInstructions": [\n'
+            '        "Lie on back with feet flat and dumbbells resting securely on your hips.",\n'
+            '        "Drive through heels and squeeze glutes hard at the top for a 1-second pause."\n'
+            "      ],\n"
+            '      "coachingCue": "Keep ribs down to prevent lower back hyperextension."\n'
             "    }\n"
             "  ]\n"
             "}\n"
@@ -152,7 +172,9 @@ CONTRASTIVE_FEW_SHOTS = [
             "Condition: Subacromial Impingement Syndrome\n"
             "Contraindicated Mechanics: Flared elbows > 70 deg, internal rotation under horizontal abduction.\n"
             "Acute Rehab Protocol: Shoulder External Rotation Wall Isometric: 3 sets x 30s.\n"
-            "Candidate Catalog Exercises: []\n\n"
+            "Clinical Safe Alternatives:\n"
+            "- Shoulder External Rotation Wall Isometric\n"
+            "- Scapular Retraction Holds\n\n"
             "Athlete Query: 'Felt a sharp pinching pain in the front of my shoulder during flat bench press yesterday. What happened?'"
         )
     },
@@ -187,7 +209,6 @@ class GymCoachOrchestrator:
         self.adapter_model = os.environ.get("ADAPTER_NAME", adapter_model_name)
         self.base_model = os.environ.get("BASE_MODEL_NAME", base_model_name)
 
-        # Detect Project Root (assumes orchestrator is at backend/agent_core/)
         if project_root is None:
             self.project_root = Path(__file__).resolve().parent.parent.parent
         else:
@@ -220,35 +241,14 @@ class GymCoachOrchestrator:
             "=== PERIODIZATION GUIDELINES (Radix Cached) ===\n"
             f"{periodization_corpus}\n\n"
             "=== OUTPUT SPECIFICATION ===\n"
-            "1. Conversational Coaching: Address the user naturally in Markdown. Explain pathology, why certain mechanics are avoided, and provide actionable cues.\n"
+            "1. Conversational Coaching: Address the user directly in Markdown. Explain the pathology, biomechanical faults to avoid, and training rationale.\n"
             "2. Workout Intent Gate:\n"
-            "   - IF the user asks to train, lift, or substitute exercises: Append a structured workout payload wrapped in `<!-- WORKOUT_PAYLOAD_START -->` and `<!-- WORKOUT_PAYLOAD_END -->`.\n"
-            "   - IF the user ONLY asks about an injury, diagnosis, or pain mechanism without asking to train: Provide clinical triage and rehab advice ONLY. DO NOT output the workout payload block or delimiters.\n"
-            "3. Exercise Schema Rules:\n"
-            "   - For catalog exercises, set existsInCatalog: true and provide the exact catalogId.\n"
-            "   - For clinical rehab protocols not in the standard catalog, set existsInCatalog: false, catalogId: null, and supply step-by-step cues in customInstructions.\n\n"
-            "JSON FORMAT (Only when workout is appropriate):\n"
-            "<!-- WORKOUT_PAYLOAD_START -->\n"
-            "{\n"
-            '  "title": "Descriptive Title",\n'
-            '  "targetFocus": "Target Area",\n'
-            '  "estimatedMinutes": 45,\n'
-            '  "items": [\n'
-            "    {\n"
-            '      "name": "Exercise Name",\n'
-            '      "existsInCatalog": true,\n'
-            '      "catalogId": "Exact_ID_or_null",\n'
-            '      "category": "warmup_rehab | compound | accessory",\n'
-            '      "sets": 3,\n'
-            '      "reps": "8-12",\n'
-            '      "targetRpe": 7,\n'
-            '      "tempo": "3-0-1-0",\n'
-            '      "customInstructions": [],\n'
-            '      "coachingCue": "Specific execution cue"\n'
-            "    }\n"
-            "  ]\n"
-            "}\n"
-            "<!-- WORKOUT_PAYLOAD_END -->"
+            "   - IF the user asks to train, work out, or substitute exercises: You MUST append a complete structured workout proposal wrapped inside `<!-- WORKOUT_PAYLOAD_START -->` and `<!-- WORKOUT_PAYLOAD_END -->`.\n"
+            "   - IF the user ONLY asks a diagnostic or symptom question without expressing intent to train: Provide clinical analysis and rehab cues in text ONLY. Do not emit the workout delimiters or payload.\n"
+            "3. Exercise Prescription Standards (CRITICAL):\n"
+            "   - For CLINICAL/INJURY sessions: All prescribed exercises MUST be set as custom movements (`existsInCatalog: false`, `catalogId: null`). You MUST provide explicit sets, reps, targetRpe, tempo, step-by-step customInstructions, and coachingCue.\n"
+            "   - For PAIN-FREE CATALOG sessions: Exercises found in the candidate list can use `existsInCatalog: true` with their verified catalogId.\n"
+            "   - Under no circumstances omit sets, reps, or volume parameters when prescribing a routine."
         )
 
     async def _post_vllm_chat(
@@ -277,19 +277,30 @@ class GymCoachOrchestrator:
             data = resp.json()
             return data["choices"][0]["message"]["content"].strip()
 
-    def _sanitize_workout_items(self, proposal: WorkoutProposal) -> WorkoutProposal:
-        """Enforces referential integrity: demotes unverified catalog IDs to custom items."""
+    def _sanitize_workout_items(self, proposal: WorkoutProposal, is_clinical: bool) -> WorkoutProposal:
+        """Enforces schema integrity and custom protocol designations."""
         for item in proposal.items:
-            if item.existsInCatalog:
-                if not item.catalogId or item.catalogId not in self.catalog_lookup:
-                    item.existsInCatalog = False
-                    item.catalogId = None
-                    if not item.customInstructions:
-                        item.customInstructions = [f"Execute {item.name} with controlled tempo ({item.tempo})."]
+            if is_clinical:
+                # All clinical rehab sessions are custom protocols by design
+                item.existsInCatalog = False
+                item.catalogId = None
+            else:
+                # Pain-free catalog route: verify ID existence
+                if item.existsInCatalog:
+                    if not item.catalogId or item.catalogId not in self.catalog_lookup:
+                        item.existsInCatalog = False
+                        item.catalogId = None
+
+            # Guard against missing instructions or volume parameters
+            if not item.customInstructions:
+                item.customInstructions = [f"Perform {item.name} with controlled {item.tempo} tempo."]
+            if not item.coachingCue:
+                item.coachingCue = f"Focus on controlled execution and maintain proper form throughout."
+
         return proposal
 
-    def _parse_synthesis_output(self, raw_output: str) -> Tuple[str, Optional[WorkoutProposal]]:
-        """Parses the text and the delimited JSON block."""
+    def _parse_synthesis_output(self, raw_output: str, is_clinical: bool) -> Tuple[str, Optional[WorkoutProposal]]:
+        """Parses conversational coaching markdown and delimited structured JSON payload."""
         delimiter_start = "<!-- WORKOUT_PAYLOAD_START -->"
         delimiter_end = "<!-- WORKOUT_PAYLOAD_END -->"
 
@@ -308,18 +319,23 @@ class GymCoachOrchestrator:
         try:
             parsed_json = json.loads(json_str)
             proposal = WorkoutProposal(**parsed_json)
-            proposal = self._sanitize_workout_items(proposal)
+            proposal = self._sanitize_workout_items(proposal, is_clinical=is_clinical)
             return chat_text, proposal
         except Exception as e:
             print(f"Warning: Failed to parse workout JSON payload: {e}")
             return chat_text, None
 
+    def _detect_injury_signals(self, query: str) -> bool:
+        """Deterministic safety interceptor: catches physical pain/pathology keywords."""
+        pattern = r"\b(pain|sharp|barking|hurt|hurts|tweak|tweaked|imping|tendon|tendonitis|tendinopathy|strain|sprain|pinch|pinching|pop|popped|soreness)\b"
+        return bool(re.search(pattern, query, flags=re.IGNORECASE))
+
     async def execute(self, user_query: str) -> OrchestratorResponse:
         """
         Executes the 2-Stage Deterministic DAG:
-        1. Pass 1: Intent Triage (LoRA Router)
-        2. Tool Execution & Circuit-Breaker Check (tau = 0.38)
-        3. Pass 2: Grounded Synthesis (Base Qwen 2.5 with Radix cached Periodization)
+        1. Pass 1: Intent Triage (LoRA Router) with deterministic Medical-First Interceptor.
+        2. Stage 2: Tool Execution (Medical RAG or Pain-Free Catalog Search).
+        3. Pass 2: Grounded Synthesis with full sets/reps and periodization.
         """
         # --- STAGE 1: Pass 1 Router ---
         pass1_messages = [
@@ -341,7 +357,17 @@ class GymCoachOrchestrator:
         except Exception:
             tool_call = None
 
-        # --- STAGE 2: Direct Execution (Class B or Class D) ---
+        # Hard Guardrail: Any injury/symptom keyword mandates medical triage
+        has_injury_symptoms = self._detect_injury_signals(user_query)
+        if has_injury_symptoms:
+            if not tool_call or tool_call.get("name") != "search_medical_db":
+                print("[Safety Interceptor] Pathology detected in query. Enforcing route: 'search_medical_db'.")
+                tool_call = {
+                    "name": "search_medical_db",
+                    "arguments": {"query": user_query}
+                }
+
+        # Direct Coaching (Class B periodization or Class D general advice)
         if not tool_call:
             return OrchestratorResponse(
                 routing_class="DIRECT_COACHING",
@@ -353,8 +379,9 @@ class GymCoachOrchestrator:
 
         tool_name = tool_call.get("name")
         args = tool_call.get("arguments", {})
+        is_clinical = (tool_name == "search_medical_db")
 
-        # --- STAGE 3: Tool Execution & Medical Safety Circuit Breaker ---
+        # --- STAGE 2: Tool Execution ---
         if tool_name == "search_medical_db":
             query_arg = args.get("query", user_query)
             medical_result = self.tools.search_medical_db(query_arg)
@@ -378,12 +405,13 @@ class GymCoachOrchestrator:
                 )
 
             clinical_card = medical_result.get("card", {})
-            candidate_list = []
-            for alt in clinical_card.get("safe_alternatives", []):
-                if isinstance(alt, dict) and "exercise_id" in alt:
-                    candidate_list.append(alt)
+            safe_alts = clinical_card.get("safe_alternatives", [])
+            formatted_alts = []
+            for alt in safe_alts:
+                if isinstance(alt, dict):
+                    formatted_alts.append(alt.get("name", alt.get("exercise_id", "")))
                 elif isinstance(alt, str):
-                    candidate_list.append({"catalogId": None, "name": alt})
+                    formatted_alts.append(alt)
 
             context_prompt = (
                 f"Clinical Reference Data:\n"
@@ -391,8 +419,11 @@ class GymCoachOrchestrator:
                 f"Contraindicated Movements: {clinical_card.get('contraindications', [])}\n"
                 f"Contraindicated Mechanics: {clinical_card.get('biomechanical_rules', [])}\n"
                 f"Acute Rehab Protocol: {clinical_card.get('rehab_protocol', [])}\n"
-                f"Candidate Exercises: {json.dumps(candidate_list)}\n\n"
-                f"Athlete Query: '{user_query}'"
+                f"Clinical Safe Alternatives:\n" + "\n".join(f"- {a}" for a in formatted_alts if a) + "\n\n"
+                f"Athlete Query: '{user_query}'\n\n"
+                f"PRESCRIPTION INSTRUCTION: The athlete wants to train around this condition. "
+                f"Prescribe a complete custom workout routine adhering strictly to the contraindicated mechanics. "
+                f"All workout items must have existsInCatalog: false, catalogId: null, and include explicit sets, reps, tempo, and cues."
             )
             routing_tag = "CLASS_A_INJURY"
 
@@ -407,7 +438,7 @@ class GymCoachOrchestrator:
                 exclude_mechanics=exclude
             )
 
-            # Safely handle both dict and list returns from search_exercise_catalog
+            candidate_list = []
             if isinstance(catalog_results, dict):
                 matched_ids = catalog_results.get("matched_ids", [])
                 candidate_list = [
@@ -427,8 +458,6 @@ class GymCoachOrchestrator:
                     }
                     for item in catalog_results[:10]
                 ]
-            else:
-                candidate_list = []
 
             context_prompt = (
                 f"Catalog Search Results:\n"
@@ -436,7 +465,9 @@ class GymCoachOrchestrator:
                 f"Equipment Available: {equipment}\n"
                 f"Excluded Mechanics: {exclude}\n"
                 f"Candidate Catalog Exercises:\n{json.dumps(candidate_list, indent=2)}\n\n"
-                f"Athlete Query: '{user_query}'"
+                f"Athlete Query: '{user_query}'\n\n"
+                f"PRESCRIPTION INSTRUCTION: Prescribe a complete workout routine utilizing the candidate catalog exercises. "
+                f"All prescribed exercises must include explicit sets, reps, tempo, targetRpe, and coaching cues."
             )
             routing_tag = "CLASS_C_CATALOG"
 
@@ -448,7 +479,7 @@ class GymCoachOrchestrator:
                 workout_proposal=None
             )
 
-        # --- STAGE 4: Pass 2 Grounded Synthesis ---
+        # --- STAGE 3: Pass 2 Grounded Synthesis ---
         pass2_messages = [
             {"role": "system", "content": self.synthesizer_system_prompt},
             *CONTRASTIVE_FEW_SHOTS,
@@ -462,7 +493,7 @@ class GymCoachOrchestrator:
             max_tokens=2048
         )
 
-        chat_text, proposal = self._parse_synthesis_output(pass2_output)
+        chat_text, proposal = self._parse_synthesis_output(pass2_output, is_clinical=is_clinical)
 
         return OrchestratorResponse(
             routing_class=routing_tag,
@@ -472,6 +503,7 @@ class GymCoachOrchestrator:
             telemetry={
                 "tool_executed": tool_name,
                 "tool_args": args,
-                "pass2_model": self.base_model
+                "pass2_model": self.base_model,
+                "safety_override": has_injury_symptoms
             }
         )
