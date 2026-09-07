@@ -1,84 +1,126 @@
+// client/src/components/catalog/ExerciseDetailModal.tsx
 import React from 'react';
 import {
-  Image,
   Modal,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  Image,
+  SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Exercise } from '../../types';
 import { Colors } from '../../theme/colors';
 import { getExerciseImageSource, getMuscleBadgeColor } from '../../utils/imageResolver';
 
-export interface ExerciseDetailModalProps {
+interface ExerciseDetailModalProps {
   exercise: Exercise | null;
   isOpen: boolean;
   onClose: () => void;
 }
 
-export default function ExerciseDetailModal({ exercise, isOpen, onClose }: ExerciseDetailModalProps) {
+export default function ExerciseDetailModal({
+  exercise,
+  isOpen,
+  onClose,
+}: ExerciseDetailModalProps) {
   if (!exercise) return null;
 
-  const imageSource = getExerciseImageSource(exercise.images?.[0]);
-  const primaryMuscles = exercise.primary_muscles ?? [];
-  const secondaryMuscles = exercise.secondary_muscles ?? [];
+  const images = exercise.images || [];
+  const imageSource = images.length > 0 ? getExerciseImageSource(images[0]) : null;
+  const primaryMuscles = exercise.primary_muscles || (exercise as any).primaryMuscles || [];
+  const secondaryMuscles = exercise.secondary_muscles || (exercise as any).secondaryMuscles || [];
+  const instructions = exercise.instructions || [];
+  const mechanics = exercise.mechanics || (exercise as any).mechanic;
+  const equipment = exercise.equipment || 'body only';
 
   return (
-    <Modal visible={isOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <Modal
+      visible={isOpen}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
       <SafeAreaView style={styles.modalContainer}>
         <View style={styles.topBar}>
-          <Text style={styles.title} numberOfLines={2}>{exercise.name}</Text>
-          <TouchableOpacity accessibilityRole="button" accessibilityLabel="Close modal" onPress={onClose} style={styles.closeButton}>
+          <View style={styles.titleBlock}>
+            <Text style={styles.title} numberOfLines={2}>{exercise.name}</Text>
+          </View>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Close modal"
+            onPress={onClose}
+            style={styles.closeBtn}
+          >
             <Ionicons name="close" size={24} color={Colors.textPrimary} />
           </TouchableOpacity>
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <View style={styles.badgeRow}>
-            <View style={styles.accentBadge}>
-              <Ionicons name="fitness-outline" size={14} color={Colors.accent} />
-              <Text style={styles.accentBadgeText}>{exercise.equipment.toUpperCase()}</Text>
+            <View style={styles.equipmentBadge}>
+              <Ionicons name="fitness-outline" size={14} color={Colors.accent} style={{ marginRight: 4 }} />
+              <Text style={styles.equipmentText}>{equipment.toUpperCase()}</Text>
             </View>
-            <View style={styles.surfaceBadge}>
-              <Text style={styles.surfaceBadgeText}>{(exercise.mechanics ?? 'GENERAL').toUpperCase()}</Text>
+            {mechanics ? (
+              <View style={styles.mechanicsBadge}>
+                <Text style={styles.mechanicsText}>{String(mechanics).toUpperCase()}</Text>
+              </View>
+            ) : null}
+          </View>
+
+          <View style={styles.visualContainer}>
+            {imageSource ? (
+              <Image source={imageSource} style={styles.heroImage} resizeMode="contain" />
+            ) : (
+              <View style={styles.blueprintCard}>
+                <View style={styles.blueprintIconCircle}>
+                  <Ionicons name="barbell-outline" size={36} color={Colors.accent} />
+                </View>
+                <Text style={styles.blueprintTitle}>Movement Blueprint</Text>
+                <Text style={styles.blueprintSubtitle}>Form & execution specification</Text>
+              </View>
+            )}
+          </View>
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Target Muscles</Text>
+            <View style={styles.pillContainer}>
+              {primaryMuscles.map((muscle: string) => (
+                <View
+                  key={`primary-${muscle}`}
+                  style={[styles.musclePill, { borderColor: getMuscleBadgeColor(muscle) }]}
+                >
+                  <Text style={[styles.musclePillText, { color: getMuscleBadgeColor(muscle) }]}>
+                    • {muscle.toUpperCase()} (PRIMARY)
+                  </Text>
+                </View>
+              ))}
+              {secondaryMuscles.map((muscle: string) => (
+                <View key={`secondary-${muscle}`} style={styles.secondaryPill}>
+                  <Text style={styles.secondaryPillText}>{muscle.toUpperCase()}</Text>
+                </View>
+              ))}
             </View>
           </View>
 
-          {imageSource ? (
-            <Image source={imageSource} style={styles.heroImage} resizeMode="cover" />
-          ) : (
-            <View style={styles.blueprintCard}>
-              <Ionicons name="barbell-outline" size={52} color={Colors.accent} />
-              <Text style={styles.blueprintTitle}>Movement Blueprint</Text>
-              <Text style={styles.blueprintSubtitle}>Visual reference available offline</Text>
-            </View>
-          )}
-
-          <Text style={styles.sectionTitle}>Target Muscles</Text>
-          <View style={styles.pillRow}>
-            {primaryMuscles.map((muscle) => (
-              <View key={`primary-${muscle}`} style={[styles.musclePill, { borderColor: getMuscleBadgeColor(muscle) }]}>
-                <Text style={styles.musclePillText}>{muscle}</Text>
-              </View>
-            ))}
-            {secondaryMuscles.map((muscle) => (
-              <View key={`secondary-${muscle}`} style={styles.secondaryPill}>
-                <Text style={styles.secondaryPillText}>{muscle}</Text>
-              </View>
-            ))}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Execution Guide</Text>
+            {instructions.length > 0 ? (
+              instructions.map((instruction: string, index: number) => (
+                <View key={`step-${index}`} style={styles.stepCard}>
+                  <View style={styles.stepNumberBadge}>
+                    <Text style={styles.stepNumberText}>{index + 1}</Text>
+                  </View>
+                  <Text style={styles.stepText}>{instruction}</Text>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.emptyText}>No written instructions available for this movement.</Text>
+            )}
           </View>
-
-          <Text style={styles.sectionTitle}>Execution Guide</Text>
-          {exercise.instructions.map((instruction, index) => (
-            <View key={`${exercise.id}-step-${index}`} style={styles.instructionCard}>
-              <View style={styles.stepBadge}><Text style={styles.stepNumber}>{index + 1}</Text></View>
-              <Text style={styles.instructionText}>{instruction}</Text>
-            </View>
-          ))}
         </ScrollView>
       </SafeAreaView>
     </Modal>
@@ -87,27 +129,115 @@ export default function ExerciseDetailModal({ exercise, isOpen, onClose }: Exerc
 
 const styles = StyleSheet.create({
   modalContainer: { flex: 1, backgroundColor: Colors.background },
-  topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: Colors.surfaceBorder },
-  title: { flex: 1, color: Colors.textPrimary, fontSize: 20, fontWeight: '700', marginRight: 12 },
-  closeButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.surfaceLight, alignItems: 'center', justifyContent: 'center' },
-  scrollContent: { padding: 16, paddingBottom: 32 },
-  badgeRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  accentBadge: { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: Colors.accentGlow, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
-  accentBadgeText: { color: Colors.accent, fontSize: 11, fontWeight: '700' },
-  surfaceBadge: { backgroundColor: Colors.surfaceLight, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 },
-  surfaceBadgeText: { color: Colors.textSecondary, fontSize: 11, fontWeight: '700' },
-  heroImage: { width: '100%', height: 190, borderRadius: 14, backgroundColor: Colors.surface, marginBottom: 20 },
-  blueprintCard: { height: 190, borderRadius: 14, backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.surfaceBorder, alignItems: 'center', justifyContent: 'center', marginBottom: 20 },
-  blueprintTitle: { color: Colors.textPrimary, fontSize: 18, fontWeight: '700', marginTop: 10 },
-  blueprintSubtitle: { color: Colors.textSecondary, fontSize: 13, marginTop: 5 },
-  sectionTitle: { color: Colors.textPrimary, fontSize: 17, fontWeight: '700', marginBottom: 10, marginTop: 4 },
-  pillRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
-  musclePill: { borderWidth: 1, backgroundColor: Colors.surface, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 6 },
-  musclePillText: { color: Colors.textPrimary, fontSize: 12, textTransform: 'capitalize' },
-  secondaryPill: { borderRadius: 16, backgroundColor: Colors.surfaceLight, paddingHorizontal: 10, paddingVertical: 6 },
-  secondaryPillText: { color: Colors.textSecondary, fontSize: 12, textTransform: 'capitalize' },
-  instructionCard: { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: Colors.surface, borderWidth: 1, borderColor: Colors.surfaceBorder, borderRadius: 10, padding: 12, marginBottom: 8 },
-  stepBadge: { width: 26, height: 26, borderRadius: 13, backgroundColor: Colors.accent, alignItems: 'center', justifyContent: 'center', marginRight: 10 },
-  stepNumber: { color: '#FFFFFF', fontWeight: '700' },
-  instructionText: { flex: 1, color: Colors.textPrimary, fontSize: 14, lineHeight: 20 },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.surfaceBorder,
+    backgroundColor: Colors.surface,
+  },
+  titleBlock: { flex: 1, paddingRight: 12 },
+  title: { fontSize: 20, fontWeight: '800', color: Colors.textPrimary },
+  closeBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.surfaceLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  scrollContent: { padding: 20, paddingBottom: 48 },
+  badgeRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
+  equipmentBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.accentGlow,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  equipmentText: { color: Colors.accent, fontWeight: '700', fontSize: 11, letterSpacing: 0.5 },
+  mechanicsBadge: {
+    backgroundColor: Colors.surfaceLight,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: Colors.surfaceBorder,
+  },
+  mechanicsText: { color: Colors.textSecondary, fontWeight: '700', fontSize: 11, letterSpacing: 0.5 },
+  visualContainer: { marginBottom: 20 },
+  heroImage: { width: '100%', height: 220, borderRadius: 12, backgroundColor: Colors.surface },
+  blueprintCard: {
+    height: 160,
+    borderRadius: 12,
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.surfaceBorder,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 16,
+  },
+  blueprintIconCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: Colors.accentGlow,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  blueprintTitle: { color: Colors.textPrimary, fontSize: 16, fontWeight: '700' },
+  blueprintSubtitle: { color: Colors.textMuted, fontSize: 12, marginTop: 2 },
+  section: { marginBottom: 24 },
+  sectionTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: Colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 10,
+  },
+  pillContainer: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  musclePill: {
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  musclePillText: { fontSize: 11, fontWeight: '700' },
+  secondaryPill: {
+    backgroundColor: Colors.surfaceLight,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  secondaryPillText: { color: Colors.textMuted, fontSize: 11, fontWeight: '600' },
+  stepCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.surfaceBorder,
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 8,
+  },
+  stepNumberBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: Colors.accentGlow,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+    marginTop: 2,
+  },
+  stepNumberText: { color: Colors.accent, fontSize: 12, fontWeight: '700' },
+  stepText: { flex: 1, color: Colors.textPrimary, fontSize: 14, lineHeight: 21 },
+  emptyText: { color: Colors.textMuted, fontSize: 13 },
 });

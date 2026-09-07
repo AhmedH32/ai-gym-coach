@@ -1,3 +1,4 @@
+// client/src/components/common/ExercisePickerModal.tsx
 import React, { useMemo } from 'react';
 import {
   Modal,
@@ -25,9 +26,21 @@ export default function ExercisePickerModal({
   onSelectExercise,
 }: ExercisePickerModalProps) {
   const exercises: Exercise[] = useMemo(() => {
-    return Array.isArray(rawExercises)
-      ? (rawExercises as unknown as Exercise[])
+    const raw = Array.isArray(rawExercises)
+      ? rawExercises
       : (rawExercises as any).exercises || [];
+
+    return raw.map((ex: any) => ({
+      id: ex.id || String(ex.name).replace(/\s+/g, '_'),
+      name: ex.name,
+      aliases: ex.aliases || [],
+      primary_muscles: ex.primary_muscles || ex.primaryMuscles || [],
+      secondary_muscles: ex.secondary_muscles || ex.secondaryMuscles || [],
+      equipment: ex.equipment || 'body only',
+      mechanics: ex.mechanics || ex.mechanic || null,
+      instructions: ex.instructions || [],
+      images: ex.images || [],
+    }));
   }, []);
 
   const handleSelect = (exerciseId: string) => {
