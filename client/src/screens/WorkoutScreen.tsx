@@ -209,6 +209,16 @@ export default function WorkoutScreen() {
   if (!session) {
     return (
       <SafeAreaView style={styles.safeArea}>
+        <View style={styles.pageHeader}>
+          <View>
+            <Text style={styles.eyebrow}>AI GYM COACH</Text>
+            <Text style={styles.pageTitle}>Workout</Text>
+          </View>
+          <View style={styles.headerStatus}>
+            <View style={styles.statusDot} />
+            <Text style={styles.statusText}>Ready</Text>
+          </View>
+        </View>
         <View style={styles.emptyContainer}>
           <View style={styles.emptyIconCircle}>
             <Ionicons name="barbell-outline" size={48} color={Colors.accent} />
@@ -234,11 +244,12 @@ export default function WorkoutScreen() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.stickyHeader}>
         <View style={styles.headerInfo}>
+          <Text style={styles.sessionEyebrow}>ACTIVE SESSION</Text>
           <Text style={styles.routineTitle} numberOfLines={1}>
             {session.routineTitle}
           </Text>
-          <View style={styles.timerRow}>
-            <Ionicons name="stopwatch-outline" size={14} color={Colors.accent} style={{ marginRight: 4 }} />
+          <View style={styles.timerPill}>
+            <Ionicons name="stopwatch-outline" size={13} color={Colors.accent} style={{ marginRight: 4 }} />
             <Text style={styles.timerText}>{formatTimer(elapsedSeconds)}</Text>
           </View>
         </View>
@@ -292,15 +303,65 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 13,
     backgroundColor: Colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: Colors.surfaceBorder,
   },
+  pageHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 14,
+    backgroundColor: Colors.background,
+  },
+  eyebrow: {
+    color: Colors.accent,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+  },
+  pageTitle: {
+    color: Colors.textPrimary,
+    fontSize: 28,
+    fontWeight: '900',
+    marginTop: 3,
+  },
+  headerStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Colors.surface,
+    borderWidth: 1,
+    borderColor: Colors.surfaceBorder,
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+  },
+  statusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: Colors.completed,
+    marginRight: 6,
+  },
+  statusText: {
+    color: Colors.textSecondary,
+    fontSize: 11,
+    fontWeight: '700',
+  },
   headerInfo: {
     flex: 1,
-    paddingRight: 10,
+    paddingRight: 12,
+  },
+  sessionEyebrow: {
+    color: Colors.accent,
+    fontSize: 9,
+    fontWeight: '800',
+    letterSpacing: 1.2,
+    marginBottom: 3,
   },
   routineTitle: {
     color: Colors.textPrimary,
@@ -311,6 +372,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: 2,
+  },
+  timerPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    backgroundColor: Colors.accentGlow,
+    borderRadius: 12,
+    paddingHorizontal: 7,
+    paddingVertical: 3,
+    marginTop: 4,
   },
   timerText: {
     color: Colors.accent,
@@ -344,7 +415,8 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   scrollList: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 14,
     paddingBottom: 40,
   },
   addExerciseBtn: {

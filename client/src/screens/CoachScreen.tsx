@@ -91,6 +91,19 @@ export default function CoachScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
+        <View style={styles.pageHeader}>
+          <View style={styles.coachAvatar}>
+            <Ionicons name="sparkles" size={18} color="#FFFFFF" />
+          </View>
+          <View style={styles.headerCopy}>
+            <Text style={styles.eyebrow}>YOUR TRAINING PARTNER</Text>
+            <Text style={styles.pageTitle}>AI Coach</Text>
+          </View>
+          <View style={styles.onlineBadge}>
+            <View style={styles.onlineDot} />
+            <Text style={styles.onlineText}>Online</Text>
+          </View>
+        </View>
         <FlatList
           ref={flatListRef}
           data={messages}
@@ -114,6 +127,14 @@ export default function CoachScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
   container: { flex: 1 },
+  pageHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12, backgroundColor: Colors.background },
+  coachAvatar: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.accent },
+  headerCopy: { flex: 1, marginLeft: 10 },
+  eyebrow: { color: Colors.accent, fontSize: 9, fontWeight: '800', letterSpacing: 1.2 },
+  pageTitle: { color: Colors.textPrimary, fontSize: 24, fontWeight: '900', marginTop: 2 },
+  onlineBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 9, paddingVertical: 6, borderRadius: 16, backgroundColor: Colors.rehabGlow },
+  onlineDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.rehab, marginRight: 5 },
+  onlineText: { color: Colors.rehab, fontSize: 10, fontWeight: '800' },
   listContent: { padding: 16, paddingBottom: 20 },
   loadingBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 8, backgroundColor: Colors.surface, borderTopWidth: 1, borderTopColor: Colors.surfaceBorder },
   loadingText: { color: Colors.textSecondary, fontSize: 12, fontWeight: '600', marginLeft: 8 },

@@ -81,6 +81,15 @@ export default function RoutinesScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <View style={styles.pageHeader}>
+        <View>
+          <Text style={styles.eyebrow}>YOUR TRAINING PLAN</Text>
+          <Text style={styles.pageTitle}>Routines</Text>
+        </View>
+        <View style={styles.countBadge}>
+          <Text style={styles.countBadgeText}>{routines.length}</Text>
+        </View>
+      </View>
       <View style={styles.headerBar}>
         <Text style={styles.headerSubtitle}>
           {routines.length} Saved {routines.length === 1 ? 'Routine' : 'Routines'}
@@ -181,6 +190,42 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Colors.surfaceBorder,
     backgroundColor: Colors.surface,
+  },
+  pageHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 14,
+    backgroundColor: Colors.background,
+  },
+  eyebrow: {
+    color: Colors.accent,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+  },
+  pageTitle: {
+    color: Colors.textPrimary,
+    fontSize: 28,
+    fontWeight: '900',
+    marginTop: 3,
+  },
+  countBadge: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.accentGlow,
+    borderWidth: 1,
+    borderColor: Colors.accent,
+  },
+  countBadgeText: {
+    color: Colors.accent,
+    fontSize: 16,
+    fontWeight: '800',
   },
   headerSubtitle: {
     color: Colors.textMuted,

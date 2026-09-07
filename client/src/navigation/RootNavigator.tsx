@@ -23,24 +23,12 @@ export default function RootNavigator() {
     <Tab.Navigator
       initialRouteName="Workout"
       screenOptions={({ route }) => ({
-        headerStyle: {
-          backgroundColor: Colors.surface,
-          shadowColor: 'transparent',
-          elevation: 0,
-          borderBottomWidth: 1,
-          borderBottomColor: Colors.surfaceBorder,
-        },
-        headerTitleStyle: {
-          color: Colors.textPrimary,
-          fontWeight: '700',
-          fontSize: 18,
-        },
-        headerTintColor: Colors.textPrimary,
+        headerShown: false,
         tabBarStyle: {
           backgroundColor: Colors.surface,
           borderTopWidth: 1,
           borderTopColor: Colors.surfaceBorder,
-          height: 64,
+          height: 68,
           paddingBottom: 10,
           paddingTop: 8,
         },
