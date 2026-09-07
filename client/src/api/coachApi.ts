@@ -1,7 +1,7 @@
 import { BackendChatResponse } from '../types';
 
 export const API_BASE_URL = 'https://preshow-spiritual-rink.ngrok-free.dev';
-export const REQUEST_TIMEOUT_MS = 90_000;
+const REQUEST_TIMEOUT_MS = 240000;
 
 export async function postCoachQuery(queryText: string): Promise<BackendChatResponse> {
   const controller = new AbortController();
