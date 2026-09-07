@@ -1,5 +1,5 @@
 // client/src/components/catalog/ExerciseDetailModal.tsx
-import React from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Modal,
   ScrollView,
@@ -9,6 +9,7 @@ import {
   View,
   Image,
   SafeAreaView,
+  ImageSourcePropType,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Exercise } from '../../types';
@@ -26,10 +27,34 @@ export default function ExerciseDetailModal({
   isOpen,
   onClose,
 }: ExerciseDetailModalProps) {
+  const [activeFrameIndex, setActiveFrameIndex] = useState(0);
+
+  // Pre-resolve all valid image frames for the current exercise
+  const imageSources = useMemo(() => {
+    if (!exercise || !Array.isArray(exercise.images)) return [];
+    return exercise.images
+      .map((img) => getExerciseImageSource(img))
+      .filter((src): src is ImageSourcePropType => src !== null);
+  }, [exercise]);
+
+  // Reset to first frame when exercise changes or modal opens
+  useEffect(() => {
+    setActiveFrameIndex(0);
+  }, [exercise?.id, isOpen]);
+
+  // Two-frame flipbook animation loop (1100ms per cadence)
+  useEffect(() => {
+    if (!isOpen || imageSources.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setActiveFrameIndex((prev) => (prev + 1) % imageSources.length);
+    }, 1100);
+
+    return () => clearInterval(interval);
+  }, [isOpen, imageSources.length]);
+
   if (!exercise) return null;
 
-  const images = exercise.images || [];
-  const imageSource = images.length > 0 ? getExerciseImageSource(images[0]) : null;
   const primaryMuscles = exercise.primary_muscles || (exercise as any).primaryMuscles || [];
   const secondaryMuscles = exercise.secondary_muscles || (exercise as any).secondaryMuscles || [];
   const instructions = exercise.instructions || [];
@@ -72,8 +97,27 @@ export default function ExerciseDetailModal({
           </View>
 
           <View style={styles.visualContainer}>
-            {imageSource ? (
-              <Image source={imageSource} style={styles.heroImage} resizeMode="contain" />
+            {imageSources.length > 0 ? (
+              <View style={styles.imageWrapper}>
+                <Image
+                  source={imageSources[activeFrameIndex]}
+                  style={styles.heroImage}
+                  resizeMode="contain"
+                />
+                {imageSources.length > 1 && (
+                  <View style={styles.indicatorContainer}>
+                    {imageSources.map((_, idx) => (
+                      <View
+                        key={`frame-dot-${idx}`}
+                        style={[
+                          styles.indicatorDot,
+                          activeFrameIndex === idx && styles.indicatorDotActive,
+                        ]}
+                      />
+                    ))}
+                  </View>
+                )}
+              </View>
             ) : (
               <View style={styles.blueprintCard}>
                 <View style={styles.blueprintIconCircle}>
@@ -170,7 +214,36 @@ const styles = StyleSheet.create({
   },
   mechanicsText: { color: Colors.textSecondary, fontWeight: '700', fontSize: 11, letterSpacing: 0.5 },
   visualContainer: { marginBottom: 20 },
-  heroImage: { width: '100%', height: 220, borderRadius: 12, backgroundColor: Colors.surface },
+  imageWrapper: {
+    position: 'relative',
+    width: '100%',
+    height: 220,
+    borderRadius: 12,
+    backgroundColor: Colors.surface,
+    overflow: 'hidden',
+  },
+  heroImage: { width: '100%', height: '100%' },
+  indicatorContainer: {
+    position: 'absolute',
+    bottom: 10,
+    alignSelf: 'center',
+    flexDirection: 'row',
+    gap: 6,
+    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  indicatorDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'rgba(255, 255, 255, 0.35)',
+  },
+  indicatorDotActive: {
+    backgroundColor: Colors.accent,
+    width: 14,
+  },
   blueprintCard: {
     height: 160,
     borderRadius: 12,
