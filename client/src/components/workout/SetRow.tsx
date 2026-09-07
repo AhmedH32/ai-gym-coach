@@ -58,16 +58,17 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    height: 48,
+    width: '100%',
+    height: 50,
     borderBottomWidth: 1,
     borderBottomColor: Colors.surfaceBorder,
-    paddingHorizontal: 8,
+    paddingHorizontal: 2,
   },
   containerCompleted: {
     backgroundColor: Colors.completedBg,
   },
   colIndex: {
-    width: 32,
+    width: 28,
     color: Colors.textSecondary,
     fontSize: 13,
     fontWeight: '700',
@@ -77,7 +78,7 @@ const styles = StyleSheet.create({
     color: Colors.completed,
   },
   colTarget: {
-    width: 78,
+    width: 54,
     color: Colors.textMuted,
     fontSize: 11,
     textAlign: 'center',
@@ -86,8 +87,9 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
+    minWidth: 0,
     height: 34,
-    marginHorizontal: 4,
+    marginHorizontal: 3,
     backgroundColor: Colors.surfaceLight,
     borderWidth: 1,
     borderColor: Colors.surfaceBorder,
@@ -101,9 +103,9 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(34, 197, 94, 0.4)',
   },
   checkBtn: {
-    width: 38,
+    width: 34,
     height: 34,
-    marginLeft: 6,
+    marginLeft: 4,
     backgroundColor: Colors.surfaceLight,
     borderRadius: 6,
     borderWidth: 1,

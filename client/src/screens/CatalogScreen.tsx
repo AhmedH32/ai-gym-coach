@@ -48,7 +48,9 @@ export default function CatalogScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
-        <Text style={styles.countText}>{exercises.length} Movements Indexed</Text>
+        <Text style={styles.eyebrow}>MOVEMENT LIBRARY</Text>
+        <Text style={styles.pageTitle}>Exercise Catalog</Text>
+        <Text style={styles.countText}>{exercises.length} movements ready to explore</Text>
       </View>
       <ExerciseSearchList exercises={exercises} onSelectExercise={setSelectedExerciseId} />
       <ExerciseDetailModal exercise={selectedExercise} isOpen={selectedExercise !== null} onClose={() => setSelectedExerciseId(null)} />
@@ -58,6 +60,8 @@ export default function CatalogScreen() {
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
-  header: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 4 },
-  countText: { color: Colors.textMuted, fontSize: 12, fontWeight: '600' },
+  header: { paddingHorizontal: 20, paddingTop: 18, paddingBottom: 10, backgroundColor: Colors.background },
+  eyebrow: { color: Colors.accent, fontSize: 10, fontWeight: '800', letterSpacing: 1.5 },
+  pageTitle: { color: Colors.textPrimary, fontSize: 25, fontWeight: '900', marginTop: 3 },
+  countText: { color: Colors.textMuted, fontSize: 12, fontWeight: '600', marginTop: 4 },
 });

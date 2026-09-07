@@ -54,11 +54,11 @@ export default function ExerciseLoggerCard({
       ) : null}
 
       <View style={styles.columnHeader}>
-        <Text style={[styles.columnLabel, { width: 32 }]}>SET</Text>
-        <Text style={[styles.columnLabel, { width: 78 }]}>TARGET</Text>
+        <Text style={[styles.columnLabel, { width: 28 }]}>SET</Text>
+        <Text style={[styles.columnLabel, { width: 54 }]}>TARGET</Text>
         <Text style={[styles.columnLabel, { flex: 1 }]}>KG</Text>
         <Text style={[styles.columnLabel, { flex: 1 }]}>ACTUAL</Text>
-        <Text style={[styles.columnLabel, { width: 38 }]}>DONE</Text>
+        <Text style={[styles.columnLabel, { width: 34 }]}>DONE</Text>
       </View>
 
       {exercise.sets.map((set, sIdx) => (
@@ -84,8 +84,10 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     borderColor: Colors.surfaceBorder,
-    padding: 14,
-    marginBottom: 16,
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.accent,
+    padding: 10,
+    marginBottom: 14,
   },
   header: {
     flexDirection: 'row',
@@ -154,8 +156,11 @@ const styles = StyleSheet.create({
   columnHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 6,
+    paddingVertical: 7,
     paddingHorizontal: 8,
+    backgroundColor: Colors.surfaceLight,
+    borderTopLeftRadius: 6,
+    borderTopRightRadius: 6,
     borderBottomWidth: 1,
     borderBottomColor: Colors.surfaceBorder,
     marginTop: 4,
