@@ -6,6 +6,10 @@
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#0D1117",
+    "splash": {
+      "backgroundColor": "#0D1117",
+      "resizeMode": "contain"
+    },
     "androidStatusBar": {
       "barStyle": "light-content",
       "backgroundColor": "#0D1117",
@@ -17,6 +21,10 @@
       "softwareKeyboardLayoutMode": "pan",
       "adaptiveIcon": {
         "backgroundColor": "#0D1117"
+      },
+      "splash": {
+        "backgroundColor": "#0D1117",
+        "resizeMode": "contain"
       }
     },
     "ios": {

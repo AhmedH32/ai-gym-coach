@@ -1,0 +1,7 @@
+# client/.easignore
+node_modules/
+.git/
+.expo/
+*.log
+dist/
+web-build/
