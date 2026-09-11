@@ -376,10 +376,11 @@ pytest tests/ -v
 
 ## Contributors
 
-Built as a collaborative engineering project by:
-* [Ahmed Hassan](https://github.com/AhmedH32) (Core architecture, 2-Stage DAG orchestrator, LoRA fine-tuning, clinical RAG safety layer, vLLM serving, automated test suite)
-* [Ahmed Samy](https://github.com/AhmedSamy5) (Clinical injury card curation & mobile UI skeletons)
-* [Youssef Elmegharbel](https://github.com/YoussefElmegharbel) (Initial routing dataset collection & baseline adapter exploration)
+Built as an end-to-end engineering collaboration by:
+
+* **[Ahmed Hassan](https://github.com/AhmedH32)** — Core Architecture, Machine Learning Systems & Orchestration
+* **[Ahmed Samy](https://github.com/Ahmedsamy2003)** — Synthetic Dataset Pipelines & Baseline Tooling
+* **[Mohamed Salem](https://github.com/ms467154-coder)** —  Mobile Client Engineering & Clinical Knowledge Base
 
 ---
 
