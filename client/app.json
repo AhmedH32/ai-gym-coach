@@ -33,10 +33,14 @@
       "supportsTablet": false
     },
     "jsEngine": "hermes",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "extra": {
       "eas": {
         "projectId": "18ecbc10-5100-4a3f-88de-a5f2e259af9e"
       }
-    }
+    },
+    "owner": "ahmed3233"
   }
 }
