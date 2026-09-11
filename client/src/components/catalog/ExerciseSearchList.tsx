@@ -1,3 +1,4 @@
+// client/src/components/catalog/ExerciseSearchList.tsx
 import React, { useMemo, useState } from 'react';
 import { FlatList, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,9 +13,12 @@ export interface ExerciseSearchListProps {
 const CATEGORIES = ['All', 'Chest', 'Back', 'Quads', 'Hamstrings', 'Shoulders', 'Arms', 'Core'] as const;
 type MuscleCategory = (typeof CATEGORIES)[number];
 
-function matchesCategory(exercise: Exercise, category: MuscleCategory): boolean {
+function matchesCategory(exercise: any, category: MuscleCategory): boolean {
   if (category === 'All') return true;
-  const muscles = [...(exercise.primary_muscles ?? []), ...(exercise.secondary_muscles ?? [])].map((muscle) => muscle.toLowerCase());
+  const primary = exercise.primary_muscles ?? exercise.primaryMuscles ?? [];
+  const secondary = exercise.secondary_muscles ?? exercise.secondaryMuscles ?? [];
+  const muscles = [...primary, ...secondary].map((muscle: string) => String(muscle).toLowerCase());
+
   const terms: Record<Exclude<MuscleCategory, 'All'>, string[]> = {
     Chest: ['chest'],
     Back: ['back', 'lat'],
@@ -33,8 +37,13 @@ export default function ExerciseSearchList({ exercises, onSelectExercise }: Exer
 
   const filteredExercises = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    return exercises.filter((exercise) => {
-      const matchesText = !query || exercise.name.toLowerCase().includes(query) || exercise.aliases.some((alias) => alias.toLowerCase().includes(query));
+    return exercises.filter((exercise: any) => {
+      const aliases: string[] = exercise.aliases ?? [];
+      const matchesText =
+        !query ||
+        exercise.name?.toLowerCase().includes(query) ||
+        aliases.some((alias) => alias.toLowerCase().includes(query));
+
       return matchesText && matchesCategory(exercise, selectedCategory);
     });
   }, [exercises, searchQuery, selectedCategory]);
@@ -68,7 +77,11 @@ export default function ExerciseSearchList({ exercises, onSelectExercise }: Exer
         {CATEGORIES.map((category) => {
           const active = selectedCategory === category;
           return (
-            <TouchableOpacity key={category} onPress={() => setSelectedCategory(category)} style={[styles.categoryPill, active && styles.categoryPillActive]}>
+            <TouchableOpacity
+              key={category}
+              onPress={() => setSelectedCategory(category)}
+              style={[styles.categoryPill, active && styles.categoryPillActive]}
+            >
               <Text style={[styles.categoryText, active && styles.categoryTextActive]}>{category}</Text>
             </TouchableOpacity>
           );
@@ -77,7 +90,7 @@ export default function ExerciseSearchList({ exercises, onSelectExercise }: Exer
 
       <FlatList
         data={filteredExercises}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item, index) => item?.id ?? `ex-${index}`}
         initialNumToRender={15}
         maxToRenderPerBatch={20}
         windowSize={10}
@@ -85,19 +98,32 @@ export default function ExerciseSearchList({ exercises, onSelectExercise }: Exer
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => (
-          <TouchableOpacity style={styles.rowItem} onPress={() => onSelectExercise(item.id)} activeOpacity={0.7}>
-            <View style={styles.itemMain}>
-              <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
-              <Text style={styles.itemMuscle}>{item.primary_muscles[0]?.toUpperCase() ?? 'GENERAL'}</Text>
-            </View>
-            <View style={styles.itemMeta}>
-              <View style={styles.equipmentTag}><Text style={styles.equipmentTagText}>{item.equipment}</Text></View>
-              <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
-            </View>
-          </TouchableOpacity>
-        )}
-        ListEmptyComponent={<View style={styles.emptyContainer}><Ionicons name="search-outline" size={40} color={Colors.textMuted} /><Text style={styles.emptyTitle}>No Exercises Found</Text><Text style={styles.emptySubtitle}>Try adjusting your search terms or filter selection.</Text></View>}
+        renderItem={({ item }: { item: any }) => {
+          const primaryList = item.primary_muscles ?? item.primaryMuscles ?? [];
+          const primaryMuscle = primaryList.length > 0 ? String(primaryList[0]).toUpperCase() : 'GENERAL';
+
+          return (
+            <TouchableOpacity style={styles.rowItem} onPress={() => onSelectExercise(item.id)} activeOpacity={0.7}>
+              <View style={styles.itemMain}>
+                <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
+                <Text style={styles.itemMuscle}>{primaryMuscle}</Text>
+              </View>
+              <View style={styles.itemMeta}>
+                <View style={styles.equipmentTag}>
+                  <Text style={styles.equipmentTagText}>{item.equipment || 'General'}</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={16} color={Colors.textMuted} />
+              </View>
+            </TouchableOpacity>
+          );
+        }}
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Ionicons name="search-outline" size={40} color={Colors.textMuted} />
+            <Text style={styles.emptyTitle}>No Exercises Found</Text>
+            <Text style={styles.emptySubtitle}>Try adjusting your search terms or filter selection.</Text>
+          </View>
+        }
       />
     </View>
   );

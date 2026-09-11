@@ -1,16 +1,19 @@
+// client/App.tsx
 import React from 'react';
+import { StatusBar } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import RootNavigator from './src/navigation/RootNavigator';
+import { Colors } from './src/theme/colors';
 
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <StatusBar style="light" />
-      <NavigationContainer>
-        <RootNavigator />
-      </NavigationContainer>
-    </SafeAreaProvider>
+    <NavigationContainer>
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor={Colors.background}
+        translucent={false}
+      />
+      <RootNavigator />
+    </NavigationContainer>
   );
 }

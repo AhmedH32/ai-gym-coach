@@ -1,10 +1,42 @@
 {
   "expo": {
-    "name": "AI Gym Coach Preview",
-    "slug": "ai-gym-coach-preview",
+    "name": "ai-gym-coach",
+    "slug": "ai-gym-coach",
     "version": "1.0.0",
     "orientation": "portrait",
-    "userInterfaceStyle": "light",
-    "assetBundlePatterns": ["**/*"]
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0D1117",
+    "splash": {
+      "backgroundColor": "#0D1117",
+      "resizeMode": "contain"
+    },
+    "androidStatusBar": {
+      "barStyle": "light-content",
+      "backgroundColor": "#0D1117",
+      "translucent": false
+    },
+    "android": {
+      "package": "com.aigymcoach.app",
+      "userInterfaceStyle": "dark",
+      "softwareKeyboardLayoutMode": "pan",
+      "adaptiveIcon": {
+        "backgroundColor": "#0D1117"
+      },
+      "splash": {
+        "backgroundColor": "#0D1117",
+        "resizeMode": "contain"
+      }
+    },
+    "ios": {
+      "bundleIdentifier": "com.aigymcoach.app",
+      "userInterfaceStyle": "dark",
+      "supportsTablet": false
+    },
+    "jsEngine": "hermes",
+    "extra": {
+      "eas": {
+        "projectId": "18ecbc10-5100-4a3f-88de-a5f2e259af9e"
+      }
+    }
   }
 }
