@@ -1,4 +1,5 @@
 # backend/agent_core/vela_router.py
+import importlib
 import os
 import sys
 import time
@@ -80,6 +81,7 @@ ROUTER_QUESTIONS: Dict[str, Dict[str, Any]] = {
             "lower back": "Lower back, lumbar erectors.",
             "traps": "Traps, trapezius, shrugs.",
             "abdominals": "Abs, abdominals, core.",
+            "unspecified": "No specific muscle group or body part is being requested for training.",
         },
     },
     "has_equipment_constraint": {
@@ -100,6 +102,7 @@ ROUTER_QUESTIONS: Dict[str, Dict[str, Any]] = {
             "body only": "Bodyweight only, calisthenics, no equipment.",
             "kettlebells": "Kettlebells.",
             "bands": "Resistance bands.",
+            "commercial_gym_all": "Full commercial gym access or no specific equipment constraint.",
         },
     },
     "has_explicit_exclusion": {
@@ -118,6 +121,7 @@ ROUTER_QUESTIONS: Dict[str, Dict[str, Any]] = {
             "cable": "Athlete states NO cables.",
             "machine": "Athlete states NO machines.",
             "lower back": "Athlete wants to avoid bending over, lower back hinges, or axial spinal loading ('don't bend me over').",
+            "none": "No equipment or movement mechanics are excluded or avoided.",
         },
     },
 }
@@ -154,24 +158,23 @@ class VelaSystemOneRouter:
             )
         )
 
-        # Patch vela3_encoder.py to use FP16 Tensor Core autocast on CUDA (including cuda:0 / cuda:1 on sm_75)
+        # Deterministic, safe line replacement to enable FP16 Tensor Cores without regex corruption
         enc_file = local_dir / "vela3_encoder.py"
         if enc_file.exists():
-            src = enc_file.read_text(encoding="utf-8")
-            # Replace bfloat16/device=="cuda" check with universal CUDA float16 autocast
-            import re
-            src_patched = re.sub(
-                r"torch\.autocast\([^\)]+\)",
-                'torch.autocast(device_type="cuda", dtype=torch.float16, enabled=str(self.device).startswith("cuda"))',
-                src,
-            )
-            if src_patched != src:
-                enc_file.write_text(src_patched, encoding="utf-8")
+            raw_lines = enc_file.read_text(encoding="utf-8").splitlines()
+            clean_lines = []
+            for line in raw_lines:
+                if "amp = torch.autocast(" in line:
+                    clean_lines.append(
+                        '        amp = torch.autocast("cuda", dtype=torch.float16, enabled=str(self.device).startswith("cuda"))'
+                    )
+                else:
+                    clean_lines.append(line)
+            enc_file.write_text("\n".join(clean_lines), encoding="utf-8")
 
         if str(local_dir) not in sys.path:
             sys.path.insert(0, str(local_dir))
 
-        import importlib
         import vela3_encoder
         importlib.reload(vela3_encoder)
         from vela3_encoder import DecisionEncoder
@@ -215,15 +218,15 @@ class VelaSystemOneRouter:
 
         # 3. Multi-Label Target Muscle Extraction
         muscle_block = ans.get("target_muscle", {})
-        primary_muscle = muscle_block.get("choice", "")
+        primary_muscle = muscle_block.get("choice", "unspecified")
         muscle_probs: Dict[str, float] = muscle_block.get("probabilities", {})
 
         target_muscles: List[str] = []
-        if primary_muscle:
+        if primary_muscle and primary_muscle != "unspecified":
             target_muscles.append(primary_muscle)
             for m_key, m_prob in sorted(muscle_probs.items(), key=lambda x: x[1], reverse=True):
                 if (
-                    m_key != primary_muscle
+                    m_key not in (primary_muscle, "unspecified")
                     and float(m_prob) >= self.secondary_slot_threshold
                     and len(target_muscles) < 2
                 ):
@@ -237,8 +240,8 @@ class VelaSystemOneRouter:
         excluded_constraints: List[str] = []
         if has_exclusion:
             excl_choice_block = ans.get("excluded_constraint", {})
-            top_excl = excl_choice_block.get("choice", "")
-            if top_excl:
+            top_excl = excl_choice_block.get("choice", "none")
+            if top_excl and top_excl != "none":
                 excluded_constraints.append(top_excl)
 
         # 5. Positive Available Equipment (Gated by `has_equipment_constraint`)
@@ -248,13 +251,13 @@ class VelaSystemOneRouter:
 
         if has_equip_prob >= 0.50:
             equip_block = ans.get("available_equipment", {})
-            primary_equip = equip_block.get("choice", "")
+            primary_equip = equip_block.get("choice", "commercial_gym_all")
             equip_probs: Dict[str, float] = equip_block.get("probabilities", {})
-            if primary_equip:
+            if primary_equip and primary_equip != "commercial_gym_all":
                 available_equipment.append(primary_equip)
                 for eq_key, eq_prob in sorted(equip_probs.items(), key=lambda x: x[1], reverse=True):
                     if (
-                        eq_key != primary_equip
+                        eq_key not in (primary_equip, "commercial_gym_all")
                         and float(eq_prob) >= self.secondary_slot_threshold
                         and len(available_equipment) < 2
                     ):
