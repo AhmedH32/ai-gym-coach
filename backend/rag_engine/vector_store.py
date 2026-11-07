@@ -61,7 +61,7 @@ class RAGVectorStore:
         )
         self.model.max_seq_length = 512
 
-        # 2. Stage-2 Cross-Encoder Reranker (FP16 on CUDA for joint query-document attention)
+      # 2. Stage-2 Cross-Encoder Reranker (FP16 on CUDA for joint query-document attention)
         self.reranker: CrossEncoder | None = None
         if reranker_name:
             rerank_kwargs = {"torch_dtype": torch.float16} if "cuda" in self.device else {}
@@ -69,7 +69,7 @@ class RAGVectorStore:
                 reranker_name,
                 device=self.device,
                 max_length=512,
-                automodel_args=rerank_kwargs,
+                model_kwargs=rerank_kwargs,
             )
 
         self.collection = self.client.get_or_create_collection(
@@ -275,17 +275,19 @@ class RAGVectorStore:
                 "results": [],
             }
 
-        # Stage-2 Cross-Encoder Reranking & Calibrated OOD Safety Circuit Breaker
+       # Stage-2 Cross-Encoder Reranking & Calibrated OOD Safety Circuit Breaker
         t_rerank_start = time.perf_counter()
         if use_reranker and self.reranker is not None:
             pairs = [[query_text, c["document"]] for c in candidates]
-            logits = self.reranker.predict(
+            # Force raw logits via Identity() to avoid double-sigmoid compression
+            raw_logits = self.reranker.predict(
                 pairs,
                 batch_size=len(pairs),
                 show_progress_bar=False,
+                activation_fn=torch.nn.Identity(),
                 convert_to_numpy=True,
             )
-            for c, logit in zip(candidates, logits):
+            for c, logit in zip(candidates, raw_logits):
                 val = float(logit)
                 prob = 1.0 / (1.0 + math.exp(-max(min(val, 20.0), -20.0)))
                 c["rerank_logit"] = round(val, 4)

@@ -441,7 +441,7 @@ class GymCoachOrchestrator:
                     "<!-- WORKOUT_PAYLOAD_START --> and <!-- WORKOUT_PAYLOAD_END --> so the app can populate the 'Add Workout' button. "
                     "All items MUST set existsInCatalog: false, catalogId: null, and include explicit sets, reps, targetRpe, tempo, customInstructions, and coachingCue."
                 )
-                max_gen_tokens = 768
+                max_gen_tokens = 1024
             else:
                 directive = (
                     "EXECUTION DIRECTIVE: The athlete is asking a diagnostic/symptom question ONLY and did NOT "
@@ -492,9 +492,10 @@ class GymCoachOrchestrator:
                 f"EXECUTION DIRECTIVE: First, write a concise 1-paragraph coaching rationale in Markdown for the user to read. "
                 f"Second, append a 3-to-4 exercise workout routine using the verified catalogId values above (`existsInCatalog: true`), "
                 f"including explicit sets, reps, targetRpe, tempo, customInstructions, and coachingCue, wrapped inside "
-                f"<!-- WORKOUT_PAYLOAD_START --> and <!-- WORKOUT_PAYLOAD_END -->."
+                f"<!-- WORKOUT_PAYLOAD_START --> and <!-- WORKOUT_PAYLOAD_END -->. "
+                f"Keep each customInstructions list to 2 concise sentences under 15 words each."
             )
-            max_gen_tokens = 768
+            max_gen_tokens = 1024
             routing_tag = "CLASS_C_CATALOG"
             tool_name = "search_exercise_catalog"
             tool_meta = {

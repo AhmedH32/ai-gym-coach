@@ -28,94 +28,96 @@ class RouterDecision(BaseModel):
     raw_answers: Dict[str, Any] = Field(default_factory=dict)
 
 
-# Batched System-1 Decision Schema for vllm-sr/vela3-fast
 ROUTER_QUESTIONS: Dict[str, Dict[str, Any]] = {
     "intent": {
         "type": "choice",
-        "instructions": "Classify the athlete's primary request intent.",
+        "instructions": (
+            "Classify the athlete's request. CRITICAL RULE: If the athlete mentions ANY pain, burning, "
+            "pinching, barking tendon, or discomfort—even while asking for a workout—choose CLASS_1_CLINICAL_RAG."
+        ),
         "criteria": {
             "CLASS_0_RED_FLAG": (
-                "Acute medical emergency or severe clinical red flag: crushing chest pain, shortness of breath, "
-                "loss of bladder/bowel control, saddle numbness, loud audible pop with muscle balling up/bruising, "
-                "joint dislocation, bone fracture, or syncope/vertigo."
+                "Life-threatening emergency or severe acute trauma: crushing chest pain, shortness of breath, "
+                "loss of bladder/bowel control, saddle numbness, loud audible pop with muscle balling up and purple bruising, "
+                "joint dislocation, or bone fracture."
             ),
             "CLASS_1_CLINICAL_RAG": (
-                "Musculoskeletal joint pain, tendonitis, tendinopathy, pinching, aching, strain, sprain, "
-                "finger tingling at the elbow, or localized gym injury symptoms where the athlete asks what happened "
-                "or how to train around the pain."
+                "ANY mention of musculoskeletal pain, burning, pinching, aching, barking tendon, tendonitis, strain, "
+                "sprain, or finger tingling—whether asking what happened OR asking for a workout around the pain."
             ),
             "CLASS_2_CATALOG_WORKOUT": (
-                "Pain-free workout routine, hypertrophy/strength session, or exercise selection request "
-                "specifying target muscles, body parts, or gym equipment with no injury or pain reported."
+                "100% PAIN-FREE workout request: athlete reports ZERO pain, ZERO burning, and ZERO injury symptoms, "
+                "and asks for a workout routine for specific muscles or equipment."
             ),
             "CLASS_3_DIRECT_COACHING": (
-                "General strength coaching question about periodization, 1RM plateaus/stalls, deload weeks, "
-                "recovery, systemic fatigue, muscle soreness (DOMS), or lifting technique without pain."
+                "Theoretical coaching question about periodization, 1RM plateaus/stalls, deload weeks, "
+                "weekly set volume (MEV/MAV/MRV), or lifting form/technique without requesting a workout."
             ),
         },
     },
     "wants_workout_program": {
         "type": "noul",
         "instructions": (
-            "Is the athlete asking for a workout routine, training session, exercise prescription, "
-            "or exercise substitutions to perform today (rather than only asking a diagnostic question "
-            "like 'what happened?' or general deload advice)?"
+            "Is the athlete explicitly asking you to build, give, or prescribe a workout routine or training session "
+            "for them to perform (as opposed to asking 'what happened?', 'how should I deload?', or a form question)?"
         ),
     },
     "target_muscle": {
         "type": "choice",
         "instructions": "Which primary muscle group or body part does the athlete want to train?",
         "criteria": {
-            "chest": "Chest, pectorals, pecs, bench press, push day.",
-            "back": "Back, lats, middle back, V-taper, pull-ups, rows, pull day.",
-            "shoulders": "Shoulders, delts, deltoids, overhead press, lateral raises.",
-            "biceps": "Biceps, bis, arm curls, preacher curls, hammer curls.",
-            "triceps": "Triceps, tris, pushdowns, skullcrushers, dips.",
-            "arms": "Both biceps and triceps together, full arm workout, bis and tris.",
-            "quadriceps": "Quads, quadriceps, front of thighs, squats, leg extensions.",
-            "hamstrings": "Hamstrings, hams, leg curls, Romanian deadlifts, hip hinges.",
-            "glutes": "Glutes, butt, hip thrusts, glute bridges.",
-            "calves": "Calves, gastrocnemius, soleus, calf raises.",
-            "legs": "Full lower body, legs, leg workout, leg day (quads, hamstrings, glutes, calves).",
-            "lower back": "Lower back, lumbar spinal erectors.",
-            "traps": "Traps, trapezius, upper back shrugs.",
-            "abdominals": "Abs, abdominals, core, six-pack, planks.",
-            "unspecified": "No specific target muscle group or body part is requested.",
+            "chest": "Chest, pectorals, pecs, bench press.",
+            "back": "Back, lats, upper/middle back, pull-ups, rows.",
+            "shoulders": "Shoulders, delts, deltoids, overhead press.",
+            "biceps": "Biceps, bis, arm curls.",
+            "triceps": "Triceps, tris, pushdowns, skullcrushers.",
+            "arms": "Full arms, both biceps and triceps together, arm session.",
+            "quadriceps": "Quads, quadriceps, front of thighs, squats.",
+            "hamstrings": "Hamstrings, hams, leg curls, Romanian deadlifts.",
+            "glutes": "Glutes, butt, hip thrusts, bridges.",
+            "calves": "Calves, calf raises.",
+            "legs": "Full lower body, legs, leg workout, leg day.",
+            "lower back": "Lower back, lumbar erectors.",
+            "traps": "Traps, trapezius, shrugs.",
+            "abdominals": "Abs, abdominals, core.",
         },
+    },
+    "has_equipment_constraint": {
+        "type": "noul",
+        "instructions": (
+            "Does the athlete explicitly mention having specific workout equipment to use "
+            "(such as dumbbells, rusty 20s, cables, machines, barbell, or bodyweight only)?"
+        ),
     },
     "available_equipment": {
         "type": "choice",
         "instructions": "Which gym equipment does the athlete state they HAVE available to use?",
         "criteria": {
-            "dumbbell": "Athlete has dumbbells, DBs, pairs of weights, rusty 20s, or home dumbbell set.",
-            "barbell": "Athlete has a barbell, Olympic bar, squat rack, power rack, or plates.",
-            "cable": "Athlete has a cable machine, pulley tower, functional trainer, or cable stack.",
-            "machine": "Athlete has selectorized gym machines, leg press, or chest press machine.",
-            "body only": "Athlete wants bodyweight only, calisthenics, pull-up bar, dip bars, or no equipment.",
-            "kettlebells": "Athlete has kettlebells.",
-            "bands": "Athlete has resistance bands or elastic loop bands.",
-            "e-z curl bar": "Athlete has an EZ-curl bar.",
-            "commercial_gym_all": "Full commercial gym access or no specific equipment limitation stated.",
+            "dumbbell": "Dumbbells, DBs, rusty 20s, pairs of weights.",
+            "barbell": "Barbell, Olympic bar, squat rack, plates.",
+            "cable": "Cables, cable machine, pulley tower.",
+            "machine": "Gym machines, leg press, selectorized machines.",
+            "body only": "Bodyweight only, calisthenics, no equipment.",
+            "kettlebells": "Kettlebells.",
+            "bands": "Resistance bands.",
         },
     },
     "has_explicit_exclusion": {
         "type": "noul",
         "instructions": (
             "Does the athlete explicitly mention equipment, machines, or movement mechanics they DO NOT have, "
-            "refuse to use, or want to avoid (e.g., 'no barbell', 'without cables', 'don't bend me over')?"
+            "refuse to use, or want to avoid (e.g., 'no barbell', 'no machines', 'don't bend me over')?"
         ),
     },
     "excluded_constraint": {
         "type": "choice",
-        "instructions": "Which equipment or movement mechanic does the athlete explicitly lack, refuse, or want to avoid?",
+        "instructions": "Which equipment or movement mechanic does the athlete explicitly refuse or want to avoid?",
         "criteria": {
-            "barbell": "Athlete states NO barbell, lacks a barbell/rack, or wants to avoid barbell exercises.",
-            "dumbbell": "Athlete states NO dumbbells or lacks dumbbells.",
-            "cable": "Athlete states NO cables, no pulley machine, or wants to avoid cables.",
-            "machine": "Athlete states NO machines, free weights only, or lacks gym machines.",
-            "compound": "Athlete wants isolation movements only and wants to avoid multi-joint compound lifts.",
-            "lower back": "Athlete wants to avoid bending over, axial spinal loading, deadlifts, or unsupported bent-over rows ('don't bend me over').",
-            "none": "The athlete does not exclude any equipment or movement mechanic.",
+            "barbell": "Athlete states NO barbell or lacks a barbell.",
+            "dumbbell": "Athlete states NO dumbbells.",
+            "cable": "Athlete states NO cables.",
+            "machine": "Athlete states NO machines.",
+            "lower back": "Athlete wants to avoid bending over, lower back hinges, or axial spinal loading ('don't bend me over').",
         },
     },
 }
@@ -124,8 +126,7 @@ ROUTER_QUESTIONS: Dict[str, Dict[str, Any]] = {
 class VelaSystemOneRouter:
     """
     System-1 Bidirectional Decision Encoder (`vllm-sr/vela3-fast`, 380M UltraBERT backbone).
-    Executes the 6-question routing & slot-extraction schema in a single non-autoregressive
-    forward pass (~25-35ms on Tesla T4).
+    Executes on Turing sm_75 using FP16 Tensor Core autocast (`torch.float16`).
     """
 
     def __init__(
@@ -146,26 +147,40 @@ class VelaSystemOneRouter:
 
         self.secondary_slot_threshold = secondary_slot_threshold
 
-        # Download ONLY the 1.52GB DecisionEncoder core (skipping 5.1GB of unused LoRA task adapters)
         local_dir = Path(
             snapshot_download(
                 repo_id=repo_id,
                 allow_patterns=["*.py", "*.json", "*.txt", "model.safetensors", "tokenizer*"],
             )
         )
+
+        # Patch vela3_encoder.py to use FP16 Tensor Core autocast on CUDA (including cuda:0 / cuda:1 on sm_75)
+        enc_file = local_dir / "vela3_encoder.py"
+        if enc_file.exists():
+            src = enc_file.read_text(encoding="utf-8")
+            # Replace bfloat16/device=="cuda" check with universal CUDA float16 autocast
+            import re
+            src_patched = re.sub(
+                r"torch\.autocast\([^\)]+\)",
+                'torch.autocast(device_type="cuda", dtype=torch.float16, enabled=str(self.device).startswith("cuda"))',
+                src,
+            )
+            if src_patched != src:
+                enc_file.write_text(src_patched, encoding="utf-8")
+
         if str(local_dir) not in sys.path:
             sys.path.insert(0, str(local_dir))
 
+        import importlib
+        import vela3_encoder
+        importlib.reload(vela3_encoder)
         from vela3_encoder import DecisionEncoder
 
         self.encoder = DecisionEncoder.load(local_dir, device=self.device)
-
-        # Warmup pass to initialize CUDA kernels / memory allocators
         _ = self.route("Warmup query for chest workout with dumbbells.")
 
     @staticmethod
     def _extract_noul_prob(block: Dict[str, Any]) -> float:
-        """Handles both DecisionEncoder.predict ('noul': float) and /v1/systemone formats."""
         if "noul" in block and isinstance(block["noul"], (int, float)):
             return float(block["noul"])
         if "p_yes" in block and isinstance(block["p_yes"], (int, float)):
@@ -180,7 +195,6 @@ class VelaSystemOneRouter:
         raw_out = self.encoder.predict(query, ROUTER_QUESTIONS)
         latency_ms = round((time.perf_counter() - t0) * 1000.0, 2)
 
-        # Normalize output container across DecisionEncoder.predict vs Vela3Encoder.system_one
         if isinstance(raw_out, tuple):
             ans = raw_out[0]
         elif isinstance(raw_out, dict) and "answers" in raw_out and isinstance(raw_out["answers"], dict):
@@ -199,17 +213,17 @@ class VelaSystemOneRouter:
         wants_wo_prob = self._extract_noul_prob(wants_wo_block)
         wants_workout = wants_wo_prob >= 0.50
 
-        # 3. Multi-Label Target Muscle Extraction from Calibrated Distribution
+        # 3. Multi-Label Target Muscle Extraction
         muscle_block = ans.get("target_muscle", {})
-        primary_muscle = muscle_block.get("choice", "unspecified")
+        primary_muscle = muscle_block.get("choice", "")
         muscle_probs: Dict[str, float] = muscle_block.get("probabilities", {})
 
         target_muscles: List[str] = []
-        if primary_muscle != "unspecified":
+        if primary_muscle:
             target_muscles.append(primary_muscle)
             for m_key, m_prob in sorted(muscle_probs.items(), key=lambda x: x[1], reverse=True):
                 if (
-                    m_key not in ("unspecified", primary_muscle)
+                    m_key != primary_muscle
                     and float(m_prob) >= self.secondary_slot_threshold
                     and len(target_muscles) < 2
                 ):
@@ -218,40 +232,34 @@ class VelaSystemOneRouter:
         # 4. Explicit Negative Constraint Gate & Exclusion Extraction
         excl_gate_block = ans.get("has_explicit_exclusion", {})
         excl_prob = self._extract_noul_prob(excl_gate_block)
-        has_exclusion = excl_prob >= 0.45
+        has_exclusion = excl_prob >= 0.50
 
         excluded_constraints: List[str] = []
         if has_exclusion:
             excl_choice_block = ans.get("excluded_constraint", {})
-            top_excl = excl_choice_block.get("choice", "none")
-            excl_probs: Dict[str, float] = excl_choice_block.get("probabilities", {})
-            if top_excl != "none":
+            top_excl = excl_choice_block.get("choice", "")
+            if top_excl:
                 excluded_constraints.append(top_excl)
-            for e_key, e_prob in sorted(excl_probs.items(), key=lambda x: x[1], reverse=True):
-                if (
-                    e_key not in ("none", top_excl)
-                    and float(e_prob) >= 0.25
-                    and len(excluded_constraints) < 2
-                ):
-                    excluded_constraints.append(e_key)
 
-        # 5. Positive Available Equipment + Deterministic Set-Difference Subtraction
-        equip_block = ans.get("available_equipment", {})
-        primary_equip = equip_block.get("choice", "commercial_gym_all")
-        equip_probs: Dict[str, float] = equip_block.get("probabilities", {})
-
+        # 5. Positive Available Equipment (Gated by `has_equipment_constraint`)
+        has_equip_block = ans.get("has_equipment_constraint", {})
+        has_equip_prob = self._extract_noul_prob(has_equip_block)
         available_equipment: List[str] = []
-        if primary_equip != "commercial_gym_all":
-            available_equipment.append(primary_equip)
-            for eq_key, eq_prob in sorted(equip_probs.items(), key=lambda x: x[1], reverse=True):
-                if (
-                    eq_key not in ("commercial_gym_all", primary_equip)
-                    and float(eq_prob) >= self.secondary_slot_threshold
-                    and len(available_equipment) < 3
-                ):
-                    available_equipment.append(eq_key)
 
-        # Subtract negatively excluded equipment (eliminates positive attention bleeding)
+        if has_equip_prob >= 0.50:
+            equip_block = ans.get("available_equipment", {})
+            primary_equip = equip_block.get("choice", "")
+            equip_probs: Dict[str, float] = equip_block.get("probabilities", {})
+            if primary_equip:
+                available_equipment.append(primary_equip)
+                for eq_key, eq_prob in sorted(equip_probs.items(), key=lambda x: x[1], reverse=True):
+                    if (
+                        eq_key != primary_equip
+                        and float(eq_prob) >= self.secondary_slot_threshold
+                        and len(available_equipment) < 2
+                    ):
+                        available_equipment.append(eq_key)
+
         excluded_set = set(excluded_constraints)
         available_equipment = [eq for eq in available_equipment if eq not in excluded_set]
 
