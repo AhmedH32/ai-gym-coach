@@ -6,6 +6,12 @@
 
 **Mechanism of Irritation:** Displacement of nucleus pulposus material through a torn annulus fibrosus in the lumbar spine, exacerbating mechanical compression and chemical irritation of nerve roots during spinal flexion and axial loading.
 
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** low back, belt line, upper buttock, radiant pain down the leg or hamstring, lumbar spine
+* **Sensation Character:** sharp shooting nerve pain, dull burning ache, electric zaps into the leg, deep lower back stiffness
+* **Provocative Gym Lifts & Angles:** conventional deadlifts pulling off the floor, rounded-back back squats, Jefferson curls, bent-over rows with spinal flexion
+* **Gym-Floor Slang Cues:** "my lower back blew out pulling off the floor", "getting a lightning bolt down my leg when I flex", "pinching in my belt line out of the hole"
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * Loaded spinal flexion exercises (e.g., conventional Jefferson curls, weighted sit-ups)

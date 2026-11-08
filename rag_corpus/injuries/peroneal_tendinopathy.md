@@ -6,6 +6,12 @@
 
 **Mechanism of Irritation:** Overuse injury or subluxation of the peroneal tendons (peroneus longus and brevis) behind the lateral malleolus, aggravated by repetitive eversion loading or excessive foot supination.
 
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** Outside of the ankle, behind the outer ankle bone, lateral malleolus region, lower outer shin
+* **Sensation Character:** Sharp edge on the outside of the ankle, burning behind the ankle bone, snapping sensation when rolling the foot, dull ache during push-off
+* **Provocative Gym Lifts & Angles:** Heavy calf raises with ankles rolling out, single-leg balancing on unstable BOSU balls, lateral agility cutting drills, barefoot jumps on uneven surfaces
+* **Gym-Floor Slang Cues:** "My outer ankle feels like it's snapping every time I push up on my toes", "It burns right behind my outer ankle bone during calf raises", "Rolling my ankles outward on heavy calf work kills my lateral side"
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * Heavy lateral cutting drills on slanted surfaces

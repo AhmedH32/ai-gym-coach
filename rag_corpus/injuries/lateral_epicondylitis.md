@@ -6,6 +6,12 @@
 
 **Mechanism of Irritation:** Micro-tearing and tendinosis at the common extensor origin (primarily extensor carpi radialis brevis) on the lateral epicondyle, provoked by repetitive wrist extension and forceful gripping.
 
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** outer elbow point, lateral epicondyle, top of forearm muscle belly, outer elbow crease
+* **Sensation Character:** sharp pinpoint biting ache, burning under grip strain, deep dull forearm ache, stiff morning grip release
+* **Provocative Gym Lifts & Angles:** heavy overhand barbell reverse curls, pronated grip deadlifts without straps, heavy overhand barbell rows, pronated wrist extension curls
+* **Gym-Floor Slang Cues:** "my outer elbow is screaming on pull day", "feels like a hot needle outside my elbow when I grab bars", "my grip is giving out from elbow pain on deadlifts"
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * Heavy overhand (pronated) barbell biceps curls (reverse curls)

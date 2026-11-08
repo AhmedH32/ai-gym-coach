@@ -6,6 +6,12 @@
 
 **Mechanism of Irritation:** Overload and degenerative changes in the patellar tendon near the inferior pole of the patella, provoked by rapid rate of force development (RFD), deep knee flexion, and high eccentric quadriceps decelerations.
 
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** [inferior pole of the patella, front of the knee, tendon right below the kneecap, upper shin attachment]
+* **Sensation Character:** [sharp catching pain, dull aching under load, stiff and tender morning stiffness, burning sensation when jumping]
+* **Provocative Gym Lifts & Angles:** [deep back squats past parallel, heavy sissy squats, explosive depth jumps, ballistic jump squats with deep knee flexion, high-velocity deceleration lunges]
+* **Gym-Floor Slang Cues:** ["my kneecap tendon is barking out of the hole", "sharp pinch right below my kneecap when squatting deep", "feels like my tendon is on fire after landing a box jump"]
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * High-impact plyometric depth jumps or bounding

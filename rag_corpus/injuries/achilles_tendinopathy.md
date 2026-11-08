@@ -6,6 +6,14 @@
 
 **Mechanism of Irritation:** Degenerative changes and failed healing response in the Achilles tendon (mid-substance or insertional) caused by excessive tensile strain, rapid plyometric loading, or sudden increase in training volume.
 
+## Colloquial Symptom Presentation
+
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** back of the heel, lower calf tendon, 2-6 cm above heel bone (mid-substance), calcaneal insertion point
+* **Sensation Character:** stiff morning first steps, dull persistent throb, sharp biting twinge on propulsion, hot burning sensation after loading
+* **Provocative Gym Lifts & Angles:** deep eccentric calf drops past neutral, heavy deficit calf raises, explosive sprint starts, box jumps, heavy push press drive phase
+* **Gym-Floor Slang Cues:** "my heel feels like a guitar string about to snap", "stiff as a board when getting out of bed", "aching lower calf when bouncing out of a squat"
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * Explosive bounding or sprint starts

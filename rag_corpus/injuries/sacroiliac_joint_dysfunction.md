@@ -6,6 +6,12 @@
 
 **Mechanism of Irritation:** Altered neuromusculoskeletal mechanics or micro-hypermobility at the sacroiliac joint, leading to localized inflammation and shearing pain during asymmetrical pelvic loading.
 
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** dimple above the buttock, low back on one side, sacroiliac joint, upper glute region
+* **Sensation Character:** deep dull ache, sharp catching pain, locking sensation, nagging pinch during hip rotation
+* **Provocative Gym Lifts & Angles:** heavy walking lunges with torso twist, single-leg deadlifts past 45 degrees of hip flexion, conventional deadlifts with hip shift, split squats with long strides
+* **Gym-Floor Slang Cues:** "my lower back locks up on one side when I hinge", "sharp catch in my glute when I step out for lunges", "feels like my hip is slipping out of place during heavy pulls"
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * Extreme asymmetrical loading with poor stability (e.g., heavy walking lunges with torso twisting)

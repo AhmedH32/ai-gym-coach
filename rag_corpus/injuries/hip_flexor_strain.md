@@ -6,6 +6,12 @@
 
 **Mechanism of Irritation:** Overstretching or violent forceful contraction of the iliopsoas or rectus femoris muscle complex, commonly occurring during explosive hip extension or high kicking.
 
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** front of the hip, anterior hip crease, top of the thigh, rectus femoris origin near ASIS
+* **Sensation Character:** sharp catching pain on drive, deep tight pull, stabbing flexor tweak, hot grabbing ache
+* **Provocative Gym Lifts & Angles:** heavy deep lunges with trailing leg extended, hanging leg raises at bottom stretch, decline sit-ups, explosive sprinters or box jumps
+* **Gym-Floor Slang Cues:** "my hip crease catches when I pull my knee up", "feels like a pulled muscle high in my thigh", "tweak in the front of my hip out of the bottom of a lunge"
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * Hanging leg raises with heavy eccentric lower and arched lower back

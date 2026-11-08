@@ -6,6 +6,14 @@
 
 **Mechanism of Irritation:** Direct impact or high horizontal adduction forces causing tearing or sprain of the acromioclavicular and coracoclavicular ligaments, leading to localized joint destabilization.
 
+## Colloquial Symptom Presentation & Prov
+
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** top of the shoulder, AC joint, outer end of collarbone, front-top shoulder point
+* **Sensation Character:** sharp pinpoint pain, deep bone-on-bone ache, localized tenderness under load, jamming sensation
+* **Provocative Gym Lifts & Angles:** deep barbell bench press at full chest depth, pec deck flyes hugging past midline, heavy parallel dips, wide-grip upright rows above parallel
+* **Gym-Floor Slang Cues:** "the very top of my shoulder feels like it's grinding", "pinching right on my collarbone when I touch the bar to my chest", "my shoulder bites hard at the bottom of a dip"
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * Cross-body horizontal adduction under load (e.g., pec deck or cable crossovers across midline)

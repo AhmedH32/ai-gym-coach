@@ -6,6 +6,12 @@
 
 **Mechanism of Irritation:** Tensile rupture or tearing of adductor muscle fibers (adductor longus, magnus, brevis) caused by sudden directional changes, wide hip abduction, or forced external rotation.
 
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** High inner thigh, deep groin fold, pubic bone attachment, proximal adductor longus tendon.
+* **Sensation Character:** Sharp tugging bite, hot tearing pain on spreading, dull inner leg ache, stiff groin pulling sensation.
+* **Provocative Gym Lifts & Angles:** Wide-stance sumo deadlifts at lockout, deep sumo squats at wide hip abduction, wide-grip leg press, lateral lunges at deep lateral end-range stretch.
+* **Gym-Floor Slang Cues:** "My groin bit me pulling sumo", "inner thigh feels like it's going to pop on wide squats", "sharp tearing sensation high up in the groin fold".
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * Ultra-wide sumo deadlifts or sumo squats under heavy load

@@ -6,6 +6,12 @@
 
 **Mechanism of Irritation:** Progressive degeneration and lengthening of the posterior tibial tendon behind the medial malleolus, leading to loss of medial longitudinal arch support and flatfoot deformity under weight-bearing.
 
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** inside of the ankle, behind the inner ankle bone (medial malleolus), midfoot arch, instep
+* **Sensation Character:** deep nagging ache, burning under the inner ankle, sharp pull during push-off, morning stiffness in the arch
+* **Provocative Gym Lifts & Angles:** barefoot heavy squats, single-leg calf raises on flat feet, jumping and high-impact plyometrics, heavy walking lunges with arch collapse
+* **Gym-Floor Slang Cues:** "my arch is completely flattening out under heavy loads", "sharp pinch right behind my inner ankle bone", "feels like my ankle is rolling inward every time I push off"
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * Heavy single-leg calf raises with severe uncorrected foot pronation/flatfoot collapse

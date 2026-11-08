@@ -6,6 +6,14 @@
 
 **Mechanism of Irritation:** Disruption or tearing of the ACL due to excessive anterior tibial translation, dynamic knee valgus, and internal rotation, destabilizing the tibiofemoral joint.
 
+## Colloquial Symptom Presentation
+
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** Deep center of knee, back of kneecap, anterior shin-knee junction, dynamic joint line.
+* **Sensation Character:** Deep unstable give-way, sharp mechanical shift, intense fullness, feeling of knee sliding forward.
+* **Provocative Gym Lifts & Angles:** Open-chain leg extensions near lockout (30-0 degrees), heavy deficit lunges with inward knee cave, aggressive change-of-direction cuts, landing deep in a dynamic squat with valgus collapse.
+* **Gym-Floor Slang Cues:** "My knee feels like it's going to buckle out", "I feel a weird slide in my joint when I lock out", "my knee caves in and pops under heavy weight".
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * Heavy open kinetic chain leg extensions near full knee extension (30-0 degrees)

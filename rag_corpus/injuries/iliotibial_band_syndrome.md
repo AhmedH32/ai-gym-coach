@@ -6,6 +6,12 @@
 
 **Mechanism of Irritation:** Compression and friction of the distal IT band against the lateral femoral epicondyle during repeated knee flexion-extension around 30 degrees of knee angle.
 
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** outer side of the knee, lateral femoral epicondyle, outside knee joint line, upper outer shin
+* **Sensation Character:** sharp biting outer knee pain, burning lateral friction, deep ache at 30 degrees bend, tight snap on knee lockout
+* **Provocative Gym Lifts & Angles:** narrow-stance leg press, deep curtsy lunges, running downhill, step-downs, squatting at 20-30 degrees knee bend
+* **Gym-Floor Slang Cues:** "the outside of my knee catches near the top of my squat", "feels like a tight band rubbing raw on the side of my leg", "stabbing outer knee pain on step-downs"
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * High-volume repetitive downhill running or step-downs

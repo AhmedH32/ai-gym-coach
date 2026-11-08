@@ -6,6 +6,12 @@
 
 **Mechanism of Irritation:** Degeneration, inflammation, or mechanical impingement of the lumbar zygapophyseal joints, aggravated by hyperextension, rotation, and compressive axial loading.
 
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** lower back offset to one side, lumbar facet joint, belt-line back pain, deep lower spine
+* **Sensation Character:** sharp catch on extension, dull localized ache, pinching back tightness, stiffness coming out of arch
+* **Provocative Gym Lifts & Angles:** standing shoulder press with lower back arch, heavy back extensions into hyperextension, deep lockout on deadlifts, rotation during standing landmine twists
+* **Gym-Floor Slang Cues:** "my lower back catches when I arch", "pinching in my spine at the top of the press", "feels stuck when I lean back"
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * Hyperextension movements under load (e.g., weighted back extensions into hyper-lordosis)

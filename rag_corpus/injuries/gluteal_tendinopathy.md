@@ -6,6 +6,12 @@
 
 **Mechanism of Irritation:** Tendinosis of the gluteus medius or minimus tendon insertions, driven by compressive forces against the greater trochanter during hip adduction and tensile load during weight-bearing.
 
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** outer hip bone, greater trochanter, lateral glute, side hip area
+* **Sensation Character:** dull lateral ache, sharp sting on side-lying, compression burning, deep hip stiffness
+* **Provocative Gym Lifts & Angles:** single-leg deadlifts with pelvic drop, heavy lateral band walks, deep hip adduction crossovers, un-cued single-leg squats
+* **Gym-Floor Slang Cues:** "feels like I am sleeping on a hard marble directly on my hip bone", "sharp bite on the outside of my hip during single-leg work", "hip feels lit up on the side whenever my leg crosses midline"
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * Single-leg deadlifts with uncorrected hip drop into adduction

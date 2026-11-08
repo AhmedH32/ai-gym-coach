@@ -6,6 +6,12 @@
 
 **Mechanism of Irritation:** Degeneration or inflammation of the triceps tendon at its insertion on the olecranon process of the ulna, caused by forceful repetitive extension or rapid eccentric deceleration.
 
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** back of the elbow, bony elbow tip, lower triceps insertion, olecranon area
+* **Sensation Character:** sharp pulling ache, burning under heavy load, stiff morning elbow lockout, dull nagging grip pain
+* **Provocative Gym Lifts & Angles:** heavy skull crushers past 90 degrees elbow flexion, deep weighted dips, overhead French presses, explosive plyometric push-ups
+* **Gym-Floor Slang Cues:** "my elbow feels like it's ripping right at the bottom of a skull crusher", "sharp pinch on the back of my arm when locking out heavy weight", "feels super stiff and achy trying to straighten my arm after benching"
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * French presses or skull crushers with deep elbow flexion and rapid lockout
