@@ -6,6 +6,12 @@
 
 **Mechanism of Irritation:** Fissuring or disruption of fibrocartilaginous meniscus tissue caused by loaded twisting, pivoting, or extreme deep hyper-flexion of the knee joint.
 
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** joint line, back of the knee, deep inside the joint, posterior knee crease
+* **Sensation Character:** sharp catching, locking up, deep throbbing ache, grinding click
+* **Provocative Gym Lifts & Angles:** ass-to-grass back squats, heavy leg press at deep flexion, rotational lunges, pivoting on planted feet past 90 degrees
+* **Gym-Floor Slang Cues:** "my knee is locking up when I try to stand out of the hole", "feels like something is catching deep inside my joint", "sharp pinch in the back of my knee when squatting too low"
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * Deep squatting below parallel (hyper-flexion under heavy load)

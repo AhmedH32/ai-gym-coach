@@ -6,6 +6,12 @@
 
 **Mechanism of Irritation:** Micro-trauma and angiofibroblastic tendinosis at the common flexor-pronator origin on the medial epicondyle of the humerus, caused by repetitive wrist flexion and forearm pronation under load.
 
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** [inside of the elbow, medial epicondyle, inner arm near the funny bone, common flexor tendon origin]
+* **Sensation Character:** [sharp knife-like twinge, dull nagging ache, grip fatigue, burning along the forearm]
+* **Provocative Gym Lifts & Angles:** [heavy chin-ups, supinated underhand barbell rows, wrist curls, heavy deadlifts with mixed grip, bicep curls at terminal wrist flexion]
+* **Gym-Floor Slang Cues:** ["my inner elbow flares up every time I pull heavy", "feels like a sharp pinch on the inside of my arm when I hang from the pull-up bar", "my grip gives out and my elbow inner bone aches"]
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * Heavy wrist curls into full flexion under heavy load

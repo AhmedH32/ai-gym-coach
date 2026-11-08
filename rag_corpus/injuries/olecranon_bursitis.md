@@ -6,6 +6,12 @@
 
 **Mechanism of Irritation:** Inflammation and fluid accumulation within the olecranon bursa between the posterior tip of the ulna and the skin, triggered by direct trauma, pressure, or repetitive friction.
 
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** [back of the elbow, tip of the elbow, posterior ulna, bony elbow point]
+* **Sensation Character:** [swollen mushy lump, aching pressure, sharp pinch when leaning, tight skin over the joint]
+* **Provocative Gym Lifts & Angles:** [forearm planks on hard floors, bench dips past 90 degrees elbow flexion, skull crushers with hard bench contact, direct pressure push-ups]
+* **Gym-Floor Slang Cues:** ["my elbow is blown up like a golf ball", "sharp pressure right on the point of my elbow when planking", "feels like a water balloon on the back of my arm"]
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * Planks resting directly on hard elbows

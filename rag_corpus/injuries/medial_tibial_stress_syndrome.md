@@ -6,6 +6,12 @@
 
 **Mechanism of Irritation:** Traction periostitis along the posteromedial tibial border caused by repetitive impact loading and excessive fascial traction from the soleus, flexor digitorum longus, and posterior tibialis muscles.
 
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** [inside of the shin, posteromedial tibial border, lower leg bone, inner calf edge]
+* **Sensation Character:** [dull throbbing ache, sharp burning under impact, deep bone bruising sensation, tender morning first-step stiffness]
+* **Provocative Gym Lifts & Angles:** [high-impact box jumps, treadmill running with overpronation, weighted jump squats, loaded plyometric landings]
+* **Gym-Floor Slang Cues:** ["my shins are burning up every time I hit the treadmill", "sharp shin splint pain halfway through my run", "deep ache right along the inside of my shin bone"]
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * High-impact plyometric box jumps on hard surfaces

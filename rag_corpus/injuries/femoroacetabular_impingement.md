@@ -6,6 +6,12 @@
 
 **Mechanism of Irritation:** Abnormal bony contact between the femoral head/neck (Cam) and/or acetabular rim (Pincer), causing labral damage and cartilage shear during deep hip flexion and internal rotation.
 
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** Anterior hip crease, deep groin, side of the hip, anterior acetabular rim
+* **Sensation Character:** Deep pinching sensation, sharp mechanical catching, toothache-like deep groin ache, tight hip flexor feeling
+* **Provocative Gym Lifts & Angles:** Ass-to-grass back squats, deep leg press past 90 degrees hip flexion, snatch catching position in deep receiving angle, sumo deadlifts at lockout
+* **Gym-Floor Slang Cues:** "Feels like a sharp pinch deep in my hip crease", "my hip locks up at the bottom of the squat", "can't hit depth without my groin catching"
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * Ass-to-grass deep squats exceeding available pain-free hip flexion ROM

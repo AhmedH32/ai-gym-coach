@@ -6,6 +6,12 @@
 
 **Mechanism of Irritation:** Compression of neurovascular structures (brachial plexus, subclavian vessels) within the interscalene triangle, costoclavicular space, or subcoracoid tunnel during overhead elevation or shoulder depression/retraction.
 
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** [side of neck and shoulder, collarbone area, armpit region, inner arm and pinky side of hand]
+* **Sensation Character:** [deep aching numbness, sharp shooting pins and needles, heavy dead-arm feeling, morning nerve burning]
+* **Provocative Gym Lifts & Angles:** [heavy farmer walks with hanging arms, overhead military press at lockout, heavy barbell shrugs, deep chest flies with stretched shoulders]
+* **Gym-Floor Slang Cues:** ["my whole arm goes completely numb doing farmer carries", "shooting tingles down my arm when pressing overhead", "heavy shrugs make my collarbone area flare up"]
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * Heavy farmer's walks with heavy downward traction on shoulders

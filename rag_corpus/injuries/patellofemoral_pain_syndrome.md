@@ -6,6 +6,12 @@
 
 **Mechanism of Irritation:** Abnormal tracking of the patella within the trochlear groove of the femur, increasing retropatellar contact stress during deep knee flexion, aggravated by weak gluteals and quadriceps imbalanced pull.
 
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** [front of the knee, deep behind the kneecap, retropatellar space, lower quad tie-in]
+* **Sensation Character:** [dull ache under load, sharp grinding feeling, aching after sitting too long, pressure when bending]
+* **Provocative Gym Lifts & Angles:** [deep back squats past parallel, heavy leg extensions, walking lunges with knee cave, leg press past 90 degrees]
+* **Gym-Floor Slang Cues:** ["my kneecap feels like it's grinding against bone", "pain right under the kneecap when I get out of the hole on squats", "my knee aches after sitting through a heavy leg workout"]
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * Open kinetic chain knee extensions from 90 to 0 degrees under heavy load

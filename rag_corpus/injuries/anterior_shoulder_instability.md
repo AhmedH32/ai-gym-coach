@@ -6,6 +6,12 @@
 
 **Mechanism of Irritation:** Laxity or disruption of the anterior glenohumeral capsule and labrum (e.g., Bankart lesion), making the humeral head prone to subluxation during combined abduction and external rotation (high-five position).
 
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** Front of the shoulder, anterior glenohumeral joint line, armpit crease, top of biceps groove.
+* **Sensation Character:** Slipping or popping sensation, apprehension of dislocation, dead arm ache, sharp pinch under load.
+* **Provocative Gym Lifts & Angles:** Overhead pressing behind the head, wide-grip bench press with elbows flared, deep dips, heavy dumbbell flyes with arms stretched past the torso.
+* **Gym-Floor Slang Cues:** "My shoulder feels like it’s going to pop out of the socket", "catching feeling at the top of a overhead press", "feels loose and slidey when I flare my elbows".
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * Barbell neck press or overhead pressing behind the head

@@ -4,11 +4,12 @@ import json
 import os
 import re
 import time
+import traceback
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import httpx
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from backend.agent_core.vela_router import RouterDecision, VelaSystemOneRouter
 from backend.analytics_engine.recovery import AnalyticsEngine
@@ -16,11 +17,11 @@ from backend.rag_engine.tools import ClinicalRAGTools
 
 
 # ------------------------------------------------------------------------------
-# 1. Pydantic Schemas for Dual-Payload Frontend Contract ("Add Workout" Button)
+# 1. Pydantic Schemas with Type Coercion
 # ------------------------------------------------------------------------------
 class WorkoutItem(BaseModel):
     name: str
-    existsInCatalog: bool
+    existsInCatalog: bool = False
     catalogId: Optional[str] = None
     category: str = Field(default="accessory", description="warmup_rehab | compound | accessory")
     sets: int = Field(default=3)
@@ -29,6 +30,31 @@ class WorkoutItem(BaseModel):
     tempo: Optional[str] = Field(default="3-0-1-0")
     customInstructions: Optional[List[str]] = Field(default_factory=list)
     coachingCue: Optional[str] = Field(default="")
+
+    @model_validator(mode="before")
+    @classmethod
+    def coerce_llm_types(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        # Coerce reps to string
+        if "reps" in data and data["reps"] is not None:
+            data["reps"] = str(data["reps"]).strip()
+        # Coerce sets to integer
+        if "sets" in data and data["sets"] is not None:
+            try:
+                data["sets"] = int(float(str(data["sets"]).split("-")[0].strip()))
+            except Exception:
+                data["sets"] = 3
+        # Coerce targetRpe to integer
+        if "targetRpe" in data and data["targetRpe"] is not None:
+            try:
+                data["targetRpe"] = int(float(str(data["targetRpe"]).split("-")[0].strip()))
+            except Exception:
+                data["targetRpe"] = 7
+        # Coerce single string instructions to list
+        if "customInstructions" in data and isinstance(data["customInstructions"], str):
+            data["customInstructions"] = [data["customInstructions"]]
+        return data
 
 
 class WorkoutProposal(BaseModel):
@@ -50,7 +76,6 @@ class OrchestratorResponse(BaseModel):
 # 2. Tier-1 Static Assets (Global Radix Prefix Cache)
 # ------------------------------------------------------------------------------
 def load_periodization_corpus(project_root: Path) -> str:
-    """Loads and concatenates the 5 static periodization Markdown files for Tier-1 Radix caching."""
     candidates = [
         project_root / "prompt_assets" / "periodization",
         project_root / "rag_corpus" / "periodization",
@@ -72,37 +97,27 @@ def load_periodization_corpus(project_root: Path) -> str:
 
 
 CONTRASTIVE_FEW_SHOTS = [
-    # Positive Anchor: Injury + Wants to Train -> Explanatory Markdown + Delimited JSON for "Add Workout" UI
+    # Exemplar 1: Clinical Injury with Workout (Custom Protocols)
     {
         "role": "user",
         "content": (
-            "### CLINICAL PROTOCOL: Patellar Tendinopathy (Jumper's Knee) (Knee) [ID: COND_PATELLAR_TENDINOPATHY]\n"
-            "**Mechanism of Irritation:** Overload in patellar tendon provoked by deep knee flexion and rapid deceleration.\n"
-            "## Absolute Contraindications (Exercises to Avoid)\n"
-            "* High-impact plyometric depth jumps or bounding\n"
-            "* Heavy deep knees-over-toes squats\n"
-            "## Biomechanical Modifications (Rules)\n"
-            "* Use slow heavy resistance (isometric or 3-4s tempo)\n"
-            "* Maintain vertical shin angle to reduce patellar tendon shear\n"
-            "## Recommended Substitutions\n"
-            "* Spanish squats (isometric patellar loading)\n"
-            "* Romanian deadlifts (posterior chain emphasis)\n\n"
-            "Athlete Query: 'Tendon below my kneecap is barking on deep squats, but I have dumbbells. Can I still get a leg workout in today?'\n\n"
-            "EXECUTION DIRECTIVE: Provide a clear clinical coaching explanation in Markdown for the athlete to read, "
-            "then append a 3-exercise workout routine wrapped inside <!-- WORKOUT_PAYLOAD_START --> and <!-- WORKOUT_PAYLOAD_END -->."
+            "### CLINICAL PROTOCOL: Patellar Tendinopathy (Knee) [ID: COND_PATELLAR_TENDINOPATHY]\n"
+            "**Mechanism of Irritation:** Overload in patellar tendon provoked by deep knee flexion.\n"
+            "## Absolute Contraindications: Deep knees-over-toes squats, plyometrics.\n"
+            "## Biomechanical Modifications: Maintain vertical shin angle.\n"
+            "## Recommended Substitutions: Spanish squats, Romanian deadlifts.\n\n"
+            "Athlete Query: 'Tendon below my kneecap is barking on deep squats, but I have dumbbells. Can I still train legs?'\n\n"
+            "EXECUTION DIRECTIVE: Prescribe a clinical explanation in Markdown followed by a 3-exercise custom rehab workout inside <!-- WORKOUT_PAYLOAD_START --> and <!-- WORKOUT_PAYLOAD_END -->. All items must have existsInCatalog: false, catalogId: null."
         ),
     },
     {
         "role": "assistant",
         "content": (
-            "Your patellar tendon is reacting to high compressive and shear forces at deep knee flexion angles. "
-            "We are pulling out deep forward-knee squats and all jumping/plyometrics today to offload the extensor mechanism.\n\n"
-            "Instead, we will desensitize the tendon with heavy isometric quad holds, followed by vertical-tibia hip hinges "
-            "and glute bridges using your dumbbells so your lower body gets trained with zero anterior knee shear.\n\n"
+            "Your patellar tendon is reacting to high compressive shear forces at deep knee angles. We will eliminate deep squats and perform tendon-desensitizing isometrics and posterior chain hinges.\n\n"
             "<!-- WORKOUT_PAYLOAD_START -->\n"
             "{\n"
             '  "title": "Patellar-Sparing Dumbbell Session",\n'
-            '  "targetFocus": "Lower Body (Tendon Rehab Focus)",\n'
+            '  "targetFocus": "Lower Body Tendon Rehab",\n'
             '  "estimatedMinutes": 40,\n'
             '  "items": [\n'
             "    {\n"
@@ -114,11 +129,8 @@ CONTRASTIVE_FEW_SHOTS = [
             '      "reps": "45s hold",\n'
             '      "targetRpe": 6,\n'
             '      "tempo": "Static",\n'
-            '      "customInstructions": [\n'
-            '        "Anchor a heavy resistance band or strap behind both knees to a secure post.",\n'
-            '        "Sit back to 60 degrees knee flexion while keeping shins strictly vertical."\n'
-            "      ],\n"
-            '      "coachingCue": "Maintain constant quad tension without letting knees drift forward over toes."\n'
+            '      "customInstructions": ["Sit back to 60 degrees knee flexion with strap behind knees.", "Maintain vertical shins."],\n'
+            '      "coachingCue": "Do not let knees drift forward."\n'
             "    },\n"
             "    {\n"
             '      "name": "Dumbbell Romanian Deadlift",\n'
@@ -129,64 +141,91 @@ CONTRASTIVE_FEW_SHOTS = [
             '      "reps": "10-12",\n'
             '      "targetRpe": 7,\n'
             '      "tempo": "3-0-1-0",\n'
-            '      "customInstructions": [\n'
-            '        "Hold dumbbells in front of thighs with a soft 15-degree knee bend.",\n'
-            '        "Push hips straight back until hamstrings are loaded, then squeeze glutes to stand."\n'
-            "      ],\n"
-            '      "coachingCue": "Keep the tibia vertical; hinge purely at the hips to spare the patellar tendon."\n'
-            "    },\n"
-            "    {\n"
-            '      "name": "Dumbbell Glute Bridge",\n'
-            '      "existsInCatalog": false,\n'
-            '      "catalogId": null,\n'
-            '      "category": "accessory",\n'
-            '      "sets": 3,\n'
-            '      "reps": "12-15",\n'
-            '      "targetRpe": 7,\n'
-            '      "tempo": "2-0-1-1",\n'
-            '      "customInstructions": [\n'
-            '        "Lie on your back with feet flat and a dumbbell resting across your hips.",\n'
-            '        "Drive through heels and hold peak glute contraction for 1 second at the top."\n'
-            "      ],\n"
-            '      "coachingCue": "Keep ribs braced down to prevent lumbar hyperextension."\n'
+            '      "customInstructions": ["Hinge at hips with soft knees.", "Lower dumbbells to mid-shin."],\n'
+            '      "coachingCue": "Keep shins vertical to spare the patellar tendon."\n'
             "    }\n"
             "  ]\n"
             "}\n"
             "<!-- WORKOUT_PAYLOAD_END -->"
         ),
     },
-    # Negative Anchor: Diagnostic Query Only -> Pure Markdown, NO Delimiters
+    # Exemplar 2: Clinical Diagnostic ONLY (No Workout Payload)
     {
         "role": "user",
         "content": (
             "### CLINICAL PROTOCOL: Subacromial Impingement Syndrome (Shoulder) [ID: COND_SUBACROMIAL_IMPINGEMENT]\n"
-            "**Mechanism of Irritation:** Compression of supraspinatus tendon and subacromial bursa beneath the acromion during abduction and internal rotation.\n"
-            "## Absolute Contraindications (Exercises to Avoid)\n"
-            "* Overhead pressing with internal rotation\n"
-            "* Upright rows above chest height\n"
-            "## Biomechanical Modifications (Rules)\n"
-            "* Press in the scapular plane (30-45 degrees anterior) with neutral grip\n\n"
+            "**Mechanism of Irritation:** Compression of supraspinatus tendon under acromion during flared abduction.\n\n"
             "Athlete Query: 'Felt a sharp pinching pain in the front of my shoulder during flat bench press yesterday. What happened?'\n\n"
-            "EXECUTION DIRECTIVE: The athlete is asking a diagnostic question ONLY. Provide clinical analysis and rehab action steps in Markdown ONLY. Do NOT emit workout JSON or delimiters."
+            "EXECUTION DIRECTIVE: Diagnostic question ONLY. Provide clinical coaching in Markdown ONLY. Do NOT emit <!-- WORKOUT_PAYLOAD_START --> or any JSON."
         ),
     },
     {
         "role": "assistant",
         "content": (
-            "A sharp anterior pinching sensation at the bottom turnaround of a flat bench press is classic for **Subacromial Impingement Syndrome**. "
-            "In this position, the supraspinatus tendon and subacromial bursa are compressed beneath the acromion bone, "
-            "typically triggered by flared elbows (abduction > 70 degrees) or an overly wide grip.\n\n"
+            "A sharp anterior pinch at the bottom of a flat bench press indicates **Subacromial Impingement Syndrome**. "
+            "Flared elbows (>70°) compress the supraspinatus tendon beneath the acromion bone.\n\n"
             "### Immediate Action Plan:\n"
-            "1. **Cease Flat Barbell Pressing:** Deload wide-grip horizontal pressing until resting irritation subsides.\n"
-            "2. **Implement Wall Isometrics:** Perform 3 sets of 30-second external rotation holds against a wall to recruit the infraspinatus without joint shear.\n"
-            "3. **Monitor Red Flags:** If you develop radiating numbness down the arm, severe night pain, or inability to raise the arm unassisted, seek evaluation from a physical therapist."
+            "1. **Pause Flat Barbell Benching:** Switch to neutral-grip dumbbell pressing in the scapular plane.\n"
+            "2. **Implement Wall Isometrics:** Perform 3 sets of 30-second external rotation holds against a wall to depressive the humeral head."
+        ),
+    },
+    # Exemplar 3: Pain-Free Catalog Workout (Verified Catalog IDs)
+    {
+        "role": "user",
+        "content": (
+            "Catalog Search Results:\n"
+            "Target Muscles: back, biceps\n"
+            "Equipment Available: dumbbell\n"
+            "Candidate Catalog Exercises:\n"
+            '[\n  {"catalogId": "Bent_Over_Two-Dumbbell_Row", "name": "Bent Over Two-Dumbbell Row"},\n  {"catalogId": "Incline_Dumbbell_Curl", "name": "Incline Dumbbell Curl"}\n]\n\n'
+            "Athlete Query: 'Build me a back and biceps workout with dumbbells.'\n\n"
+            "EXECUTION DIRECTIVE: Prescribe a coaching rationale in Markdown followed by a 2-to-3 exercise routine using the verified catalogId values above (existsInCatalog: true) inside <!-- WORKOUT_PAYLOAD_START --> and <!-- WORKOUT_PAYLOAD_END -->."
+        ),
+    },
+    {
+        "role": "assistant",
+        "content": (
+            "Here is a targeted dumbbell pull session hitting the lats and elbow flexors with optimal resistance curves.\n\n"
+            "<!-- WORKOUT_PAYLOAD_START -->\n"
+            "{\n"
+            '  "title": "Dumbbell Back & Biceps Hypertrophy",\n'
+            '  "targetFocus": "Back & Biceps",\n'
+            '  "estimatedMinutes": 40,\n'
+            '  "items": [\n'
+            "    {\n"
+            '      "name": "Bent Over Two-Dumbbell Row",\n'
+            '      "existsInCatalog": true,\n'
+            '      "catalogId": "Bent_Over_Two-Dumbbell_Row",\n'
+            '      "category": "compound",\n'
+            '      "sets": 3,\n'
+            '      "reps": "8-10",\n'
+            '      "targetRpe": 8,\n'
+            '      "tempo": "3-0-1-0",\n'
+            '      "customInstructions": ["Hinge torso to 45 degrees.", "Row dumbbells toward hip pockets."],\n'
+            '      "coachingCue": "Drive elbows back rather than pulling with wrists."\n'
+            "    },\n"
+            "    {\n"
+            '      "name": "Incline Dumbbell Curl",\n'
+            '      "existsInCatalog": true,\n'
+            '      "catalogId": "Incline_Dumbbell_Curl",\n'
+            '      "category": "accessory",\n'
+            '      "sets": 3,\n'
+            '      "reps": "10-12",\n'
+            '      "targetRpe": 8,\n'
+            '      "tempo": "3-0-1-1",\n'
+            '      "customInstructions": ["Set bench to 60 degrees.", "Curl dumbbells while keeping upper arms fixed."],\n'
+            '      "coachingCue": "Maximize stretch at the bottom without swinging."\n'
+            "    }\n"
+            "  ]\n"
+            "}\n"
+            "<!-- WORKOUT_PAYLOAD_END -->"
         ),
     },
 ]
 
 
 # ------------------------------------------------------------------------------
-# 3. Core Orchestrator Implementation
+# 3. Core Orchestrator
 # ------------------------------------------------------------------------------
 class GymCoachOrchestrator:
     _RE_CODE_FENCE = re.compile(r"^```(?:json)?\s*|\s*```$", re.IGNORECASE)
@@ -206,34 +245,26 @@ class GymCoachOrchestrator:
         self.adapter_model = os.environ.get("ADAPTER_NAME", adapter_model_name)
         self.project_root = project_root or Path(__file__).resolve().parent.parent.parent
 
-        # Persistent HTTP/1.1 Keep-Alive connection pool to vLLM
         self.http_client = httpx.AsyncClient(
             timeout=90.0,
             limits=httpx.Limits(max_keepalive_connections=20, max_connections=50),
         )
 
-        # 1. Initialize Co-Processor Stack (Two-Stage RAG + Vela 3.0 Fast on GPU 1)
         self.tools = rag_tools or ClinicalRAGTools(device=coprocessor_device)
         self.router = router or VelaSystemOneRouter(device=coprocessor_device)
 
-        # 2. Build In-Memory Fast Lookup for Catalog ID Verification
         self.catalog_lookup: Dict[str, Dict[str, Any]] = {}
         for candidate_rel in ["raw_data/exercises.json", "client/src/assets/data/exercises.json"]:
             p = self.project_root / candidate_rel
             if p.exists():
                 with open(p, "r", encoding="utf-8") as f:
                     raw_exercises = json.load(f)
-                    exercises_list = (
-                        raw_exercises
-                        if isinstance(raw_exercises, list)
-                        else raw_exercises.get("exercises", [])
-                    )
+                    exercises_list = raw_exercises if isinstance(raw_exercises, list) else raw_exercises.get("exercises", [])
                     for ex in exercises_list:
                         self.catalog_lookup[ex["id"]] = ex
                 print(f"✓ Orchestrator indexed {len(self.catalog_lookup)} catalog exercises.")
                 break
 
-        # 3. Assemble Tier-1 Global Static Prefix (100% Radix Cache Hit Across All Requests)
         periodization_corpus = load_periodization_corpus(self.project_root)
         self.synthesizer_system_prompt = (
             "You are an elite Sports Medicine & Strength Conditioning Coach AI.\n"
@@ -241,18 +272,17 @@ class GymCoachOrchestrator:
             "=== PERIODIZATION GUIDELINES (Radix Cached) ===\n"
             f"{periodization_corpus}\n\n"
             "=== OUTPUT SPECIFICATION (DUAL-PAYLOAD CONTRACT) ===\n"
-            "1. Conversational Coaching (Part 1 - Read by Athlete): Address the user directly in clear Markdown (2 concise paragraphs). Explain the pathology or training rationale, biomechanical faults to avoid, and why the selected movements are safe.\n"
-            "2. Structured Workout Payload (Part 2 - Parsed by App 'Add Workout' Button):\n"
-            "   - Follow the EXECUTION DIRECTIVE at the end of the user prompt strictly.\n"
-            "   - When instructed to prescribe a workout, you MUST append a valid JSON object matching the WorkoutProposal schema wrapped strictly inside `<!-- WORKOUT_PAYLOAD_START -->` and `<!-- WORKOUT_PAYLOAD_END -->`.\n"
-            "   - When instructed NOT to prescribe a workout (diagnostic or deload advice only), output ONLY the conversational Markdown text and NEVER emit the workout delimiters.\n"
-            "3. Exercise Prescription Standards (CRITICAL):\n"
-            "   - Prescribe 3 to 4 high-impact exercises per session.\n"
-            "   - For CLINICAL/INJURY sessions: All prescribed exercises MUST be set as custom movements (`existsInCatalog: false`, `catalogId: null`) with explicit `sets`, `reps`, `targetRpe`, `tempo`, 2 concise `customInstructions` steps, and a `coachingCue`.\n"
-            "   - For PAIN-FREE CATALOG sessions: Use verified `catalogId` values from the candidate list (`existsInCatalog: true`) with explicit `sets`, `reps`, `targetRpe`, `tempo`, `customInstructions`, and `coachingCue`."
+            "1. Conversational Coaching: Address the user in Markdown (1 to 2 paragraphs). Explain pathology, rationale, and form cues.\n"
+            "2. Workout Payload Gate:\n"
+            "   - Follow the EXECUTION DIRECTIVE strictly.\n"
+            "   - When instructed to prescribe a workout, output a valid JSON object matching the WorkoutProposal schema wrapped inside `<!-- WORKOUT_PAYLOAD_START -->` and `<!-- WORKOUT_PAYLOAD_END -->`.\n"
+            "   - When instructed NOT to prescribe a workout, emit Markdown ONLY and NEVER output the delimiters.\n"
+            "3. Exercise Prescription Standards:\n"
+            "   - Prescribe 2 to 4 exercises per session with concise 1-sentence customInstructions.\n"
+            "   - For CLINICAL sessions: existsInCatalog=false, catalogId=null.\n"
+            "   - For CATALOG sessions: existsInCatalog=true, catalogId=verified ID from candidates."
         )
 
-        # Default Session Biometric Profile (Tier-2 Session Prefix Cache)
         self.default_session_profile = AnalyticsEngine.build_system_context(
             muscle_states=[
                 AnalyticsEngine.evaluate_muscle_recovery("Quadriceps", hours_elapsed=48.0, weekly_sets=12),
@@ -267,7 +297,7 @@ class GymCoachOrchestrator:
         model: str,
         messages: List[Dict[str, str]],
         temperature: float = 0.1,
-        max_tokens: int = 768,
+        max_tokens: int = 1024,
     ) -> Tuple[str, Dict[str, Any]]:
         url = f"{self.vllm_base_url}/chat/completions"
         payload = {
@@ -289,7 +319,6 @@ class GymCoachOrchestrator:
         return content, usage
 
     def _sanitize_workout_items(self, proposal: WorkoutProposal, is_clinical: bool) -> WorkoutProposal:
-        """Enforces schema integrity so the mobile app's 'Add Workout' button never crashes."""
         for item in proposal.items:
             if is_clinical:
                 item.existsInCatalog = False
@@ -308,11 +337,6 @@ class GymCoachOrchestrator:
     def _parse_synthesis_output(
         self, raw_output: str, is_clinical: bool
     ) -> Tuple[str, Optional[WorkoutProposal]]:
-        """
-        Splits the LLM response into:
-          1. `chat_text`: Explanatory Markdown displayed in the user's chat bubble.
-          2. `proposal`: Validated `WorkoutProposal` object powering the app's 'Add Workout' button.
-        """
         delimiter_start = "<!-- WORKOUT_PAYLOAD_START -->"
         delimiter_end = "<!-- WORKOUT_PAYLOAD_END -->"
 
@@ -328,7 +352,6 @@ class GymCoachOrchestrator:
         else:
             json_str = remaining.strip()
 
-        # Strip optional ```json ... ``` markdown fences if emitted inside the HTML delimiters
         json_str = self._RE_CODE_FENCE.sub("", json_str).strip()
 
         try:
@@ -337,7 +360,10 @@ class GymCoachOrchestrator:
             proposal = self._sanitize_workout_items(proposal, is_clinical=is_clinical)
             return chat_text, proposal
         except Exception as e:
-            print(f"Warning: Failed to parse workout JSON payload: {e}")
+            print("\n❌ [PARSE ERROR] WorkoutProposal deserialization failed!")
+            print(f"Error: {e}")
+            print(f"Raw JSON payload:\n{json_str[:400]}")
+            traceback.print_exc()
             return chat_text, None
 
     def build_tiered_messages(
@@ -345,12 +371,6 @@ class GymCoachOrchestrator:
         dynamic_turn_prompt: str,
         session_user_profile: Optional[str] = None,
     ) -> List[Dict[str, str]]:
-        """
-        Enforces strict 3-Tier Prompt Ordering for vLLM Radix Prefix Caching:
-          - Tier 1 (Messages 0..4): Static System Prompt + Periodization Corpus + Contrastive Few-Shots
-          - Tier 2 (Start of Msg 5): Session User Biometric/Recovery Profile (cached across user turns)
-          - Tier 3 (End of Msg 5):   Dynamic Turn RAG Context + Athlete Query
-        """
         profile_block = session_user_profile or self.default_session_profile
         return [
             {"role": "system", "content": self.synthesizer_system_prompt},
@@ -368,20 +388,18 @@ class GymCoachOrchestrator:
     ) -> OrchestratorResponse:
         t_start = time.perf_counter()
 
-        # --- STAGE 1: System-1 Batched Vela 3.0 Fast Router (~25-35ms on GPU 1) ---
+        # 1. System-1 Decision Encoder Router
         decision: RouterDecision = await asyncio.to_thread(self.router.route, user_query)
 
-        # Hard Stop Circuit Breaker for Class 0 Acute Medical Red Flags (Zero LLM Calls)
+        # Class 0: Acute Emergency Circuit Breaker
         if decision.intent == "CLASS_0_RED_FLAG":
             total_ms = round((time.perf_counter() - t_start) * 1000.0, 2)
             return OrchestratorResponse(
                 routing_class="CLASS_A_OUT_OF_SCOPE",
                 chat_text=(
                     "### URGENT CLINICAL TRIAGE ALERT\n"
-                    "Your reported symptoms indicate a potential acute medical or neurological red flag "
-                    "(such as severe nerve compression, complete tissue rupture, or systemic cardiovascular distress).\n\n"
-                    "**Immediate Action:** Cease all physical training immediately and seek urgent evaluation "
-                    "from an emergency physician or qualified healthcare professional."
+                    "Your reported symptoms indicate an acute medical or neurological red flag. "
+                    "Cease all physical training immediately and seek urgent medical evaluation."
                 ),
                 has_workout=False,
                 workout_proposal=None,
@@ -394,26 +412,21 @@ class GymCoachOrchestrator:
                 },
             )
 
-        # --- STAGE 2: Tool Execution (Two-Stage Clinical RAG or Catalog Filter) ---
+        # 2. Tool Execution
         is_clinical = decision.intent == "CLASS_1_CLINICAL_RAG"
         rag_latency_ms = 0.0
 
         if is_clinical:
-            medical_res = await asyncio.to_thread(
-                self.tools.search_medical_db,
-                user_query,
-            )
+            medical_res = await asyncio.to_thread(self.tools.search_medical_db, user_query)
             rag_latency_ms = medical_res.latency_ms
 
-            # Fixed Circuit Breaker: properly checks Pydantic `triage_required` / `OUT_OF_DOMAIN`
             if medical_res.triage_required or medical_res.status != "MATCH_FOUND":
                 total_ms = round((time.perf_counter() - t_start) * 1000.0, 2)
                 return OrchestratorResponse(
                     routing_class="CLASS_A_OUT_OF_SCOPE",
                     chat_text=(
                         "Your query describes symptoms that fall outside our verified musculoskeletal sports "
-                        "rehabilitation database (Cross-Encoder safety threshold not met). "
-                        "For non-orthopedic symptoms or acute pathology, please consult a qualified healthcare professional."
+                        "rehabilitation database. For acute or unverified pathology, please consult a physician."
                     ),
                     has_workout=False,
                     workout_proposal=None,
@@ -428,25 +441,19 @@ class GymCoachOrchestrator:
                     },
                 )
 
-            equip_note = (
-                f"Available Equipment Constraint: {decision.catalog_equipment_arg}\n"
-                if decision.catalog_equipment_arg
-                else ""
-            )
+            equip_note = f"Equipment Available: {decision.catalog_equipment_arg}\n" if decision.catalog_equipment_arg else ""
             if decision.wants_workout_program:
                 directive = (
-                    "EXECUTION DIRECTIVE: The athlete wants to train around this injury. "
-                    "First, write a clear 2-paragraph clinical coaching explanation in Markdown for the user to read. "
-                    "Second, append a 3-to-4 exercise custom rehab/modified workout routine wrapped inside "
-                    "<!-- WORKOUT_PAYLOAD_START --> and <!-- WORKOUT_PAYLOAD_END --> so the app can populate the 'Add Workout' button. "
-                    "All items MUST set existsInCatalog: false, catalogId: null, and include explicit sets, reps, targetRpe, tempo, customInstructions, and coachingCue."
+                    "EXECUTION DIRECTIVE: Prescribe a concise coaching explanation in Markdown, "
+                    "then append a 2-to-3 exercise custom rehab workout routine inside "
+                    "<!-- WORKOUT_PAYLOAD_START --> and <!-- WORKOUT_PAYLOAD_END -->. "
+                    "All items MUST set existsInCatalog: false, catalogId: null."
                 )
                 max_gen_tokens = 1024
             else:
                 directive = (
-                    "EXECUTION DIRECTIVE: The athlete is asking a diagnostic/symptom question ONLY and did NOT "
-                    "ask for a workout session. Provide a concise clinical explanation and 3 bulleted rehab cues "
-                    "in pure Markdown. Do NOT emit <!-- WORKOUT_PAYLOAD_START --> or any JSON block."
+                    "EXECUTION DIRECTIVE: Diagnostic question ONLY. Provide clinical explanation in Markdown. "
+                    "Do NOT emit <!-- WORKOUT_PAYLOAD_START --> or any JSON block."
                 )
                 max_gen_tokens = 384
 
@@ -462,8 +469,6 @@ class GymCoachOrchestrator:
                 "matched_ids": medical_res.matched_ids,
                 "min_distance": medical_res.min_distance,
                 "max_rerank_prob": medical_res.max_rerank_prob,
-                "stage1_ms": medical_res.stage1_ms,
-                "rerank_ms": medical_res.rerank_ms,
             }
 
         elif decision.intent == "CLASS_2_CATALOG_WORKOUT":
@@ -471,46 +476,37 @@ class GymCoachOrchestrator:
                 muscle=decision.catalog_muscle_arg,
                 equipment=decision.catalog_equipment_arg,
                 exclude_mechanics=decision.catalog_exclude_arg,
-                limit=6,
+                limit=5,
             )
             rag_latency_ms = catalog_res.latency_ms
             candidate_list = [
                 {
                     "catalogId": cid,
                     "name": self.catalog_lookup.get(cid, {}).get("name", cid),
-                    "equipment": self.catalog_lookup.get(cid, {}).get("equipment", ""),
                 }
-                for cid in catalog_res.matched_ids[:6]
+                for cid in catalog_res.matched_ids[:5]
             ]
             dynamic_turn_prompt = (
                 f"Catalog Search Results:\n"
                 f"Target Muscles: {decision.catalog_muscle_arg or 'General'}\n"
                 f"Equipment Available: {decision.catalog_equipment_arg or 'Commercial Gym'}\n"
-                f"Excluded Constraints: {decision.catalog_exclude_arg or 'None'}\n"
                 f"Candidate Catalog Exercises:\n{json.dumps(candidate_list, indent=2)}\n\n"
                 f"Athlete Query: '{user_query}'\n\n"
-                f"EXECUTION DIRECTIVE: First, write a concise 1-paragraph coaching rationale in Markdown for the user to read. "
-                f"Second, append a 3-to-4 exercise workout routine using the verified catalogId values above (`existsInCatalog: true`), "
-                f"including explicit sets, reps, targetRpe, tempo, customInstructions, and coachingCue, wrapped inside "
-                f"<!-- WORKOUT_PAYLOAD_START --> and <!-- WORKOUT_PAYLOAD_END -->. "
-                f"Keep each customInstructions list to 2 concise sentences under 15 words each."
+                f"EXECUTION DIRECTIVE: Write a concise coaching rationale in Markdown, "
+                f"then append a 2-to-3 exercise workout using the verified catalogId values above (existsInCatalog: true) "
+                f"inside <!-- WORKOUT_PAYLOAD_START --> and <!-- WORKOUT_PAYLOAD_END -->."
             )
             max_gen_tokens = 1024
             routing_tag = "CLASS_C_CATALOG"
             tool_name = "search_exercise_catalog"
             tool_meta = {
-                "muscle": decision.catalog_muscle_arg,
-                "equipment": decision.catalog_equipment_arg,
-                "exclude_mechanics": decision.catalog_exclude_arg,
                 "matched_ids": catalog_res.matched_ids,
             }
 
         else:
-            # CLASS_3_DIRECT_COACHING (Periodization, plateaus, deloads, technique)
             dynamic_turn_prompt = (
                 f"Athlete Query: '{user_query}'\n\n"
-                f"EXECUTION DIRECTIVE: Answer the athlete's periodization, plateau, recovery, or technique "
-                f"question directly and concisely in Markdown using the Periodization Guidelines above. "
+                f"EXECUTION DIRECTIVE: Answer the athlete's coaching/periodization question directly in Markdown. "
                 f"Do NOT emit <!-- WORKOUT_PAYLOAD_START --> or any JSON block."
             )
             max_gen_tokens = 400
@@ -518,7 +514,7 @@ class GymCoachOrchestrator:
             tool_name = None
             tool_meta = {}
 
-        # --- STAGE 3: Single-Pass Tiered Prefix-Cached LLM Synthesis (GPU 0) ---
+        # 3. Single-Pass Tiered Prefix-Cached Synthesis
         messages = self.build_tiered_messages(
             dynamic_turn_prompt=dynamic_turn_prompt,
             session_user_profile=session_user_profile,

@@ -14,10 +14,9 @@ from sentence_transformers import CrossEncoder, SentenceTransformer
 
 class RAGVectorStore:
     """
-    Two-Stage Clinical Vector Store:
-      - Stage 1 (Bi-Encoder Wide Recall): BAAI/bge-base-en-v1.5 over HNSW Inner-Product space (K=10, tau_dense=0.58)
-      - Stage 2 (Cross-Encoder Reranker & Safety Gate): BAAI/bge-reranker-base joint query-document scoring
-    Automatically binds to GPU co-processor (cuda:1 on dual-T4 setups) in FP16.
+    Two-Stage Decoupled Clinical Vector Store:
+      - Search Surface (Bi-Encoder + Cross-Encoder): Condition + Category + Mechanism + Colloquial Triggers (~150 tokens)
+      - Payload Surface (LLM Context): Full verbatim protocol markdown with contraindications and substitutions
     """
 
     QUERY_INSTRUCTION = "Represent this sentence for searching relevant passages: "
@@ -38,7 +37,6 @@ class RAGVectorStore:
         self.persist_directory = persist_directory
         self.batch_size = batch_size
 
-        # Resolve target compute device: env override -> cuda:1 (if dual GPU) -> cuda:0 -> cpu
         env_device = os.environ.get("COPROCESSOR_DEVICE")
         if device is not None:
             self.device = device
@@ -52,7 +50,6 @@ class RAGVectorStore:
         os.makedirs(self.persist_directory, exist_ok=True)
         self.client = chromadb.PersistentClient(path=self.persist_directory)
 
-        # 1. Stage-1 Bi-Encoder (FP16 on CUDA for sub-10ms encoding)
         model_kwargs = {"torch_dtype": torch.float16} if "cuda" in self.device else {}
         self.model = SentenceTransformer(
             model_name,
@@ -61,7 +58,6 @@ class RAGVectorStore:
         )
         self.model.max_seq_length = 512
 
-      # 2. Stage-2 Cross-Encoder Reranker (FP16 on CUDA for joint query-document attention)
         self.reranker: CrossEncoder | None = None
         if reranker_name:
             rerank_kwargs = {"torch_dtype": torch.float16} if "cuda" in self.device else {}
@@ -79,8 +75,19 @@ class RAGVectorStore:
 
     @classmethod
     def strip_sources_footer(cls, markdown_text: str) -> str:
-        """Strips trailing '## Sources' URL blocks to save ~45 prompt tokens per retrieved card."""
         return cls._RE_SOURCES_SECTION.sub("", markdown_text).strip()
+
+    @classmethod
+    def extract_search_surface(cls, full_markdown: str) -> str:
+        """
+        Extracts high-density diagnostic text (Topic, Category, Mechanism, Triggers)
+        and strips exercise substitutions/sources to prevent representation dilution.
+        """
+        clean_text = cls.strip_sources_footer(full_markdown)
+        marker = "## Absolute Contraindications"
+        if marker in clean_text:
+            return clean_text.split(marker)[0].strip()
+        return clean_text[:600].strip()
 
     def embed_documents(self, texts: list[str]) -> list[list[float]]:
         embeddings = self.model.encode(
@@ -130,11 +137,13 @@ class RAGVectorStore:
         topic_match = cls._RE_TOPIC.search(content)
         topic = topic_match.group(1).strip() if topic_match else os.path.basename(file_path)
 
+        search_surface = cls.extract_search_surface(content)
         content_hash = hashlib.sha256(content.encode("utf-8")).hexdigest()
 
         return {
             "id": doc_id,
             "document": content,
+            "search_surface": search_surface,
             "metadata": {
                 "id": doc_id,
                 "topic": topic,
@@ -142,6 +151,7 @@ class RAGVectorStore:
                 "source_type": source_type,
                 "file_name": os.path.basename(file_path),
                 "sha256": content_hash,
+                "search_surface": search_surface,
             },
         }
 
@@ -176,13 +186,16 @@ class RAGVectorStore:
         if to_upsert_ids:
             for i in range(0, len(to_upsert_ids), self.batch_size):
                 chunk_ids = to_upsert_ids[i : i + self.batch_size]
-                chunk_docs = [disk_docs[doc_id]["document"] for doc_id in chunk_ids]
+                chunk_payloads = [disk_docs[doc_id]["document"] for doc_id in chunk_ids]
+                chunk_surfaces = [disk_docs[doc_id]["search_surface"] for doc_id in chunk_ids]
                 chunk_metas = [disk_docs[doc_id]["metadata"] for doc_id in chunk_ids]
-                chunk_embeddings = self.embed_documents(chunk_docs)
+                
+                # Embed the high-density search surface, store the full payload
+                chunk_embeddings = self.embed_documents(chunk_surfaces)
                 self.collection.upsert(
                     ids=chunk_ids,
                     embeddings=chunk_embeddings,
-                    documents=chunk_docs,
+                    documents=chunk_payloads,
                     metadatas=chunk_metas,
                 )
 
@@ -209,15 +222,15 @@ class RAGVectorStore:
         n_results: int = 2,
         candidate_pool_size: int = 10,
         distance_threshold: float = 0.58,
-        rerank_prob_threshold: float = 0.12,
+        rerank_prob_threshold: float = 0.05,
         use_reranker: bool = True,
         where_filter: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """
-        Executes Two-Stage Retrieval:
-          1. Dense HNSW lookup fetches top `candidate_pool_size` (K=10) with lenient tau_dense = 0.58.
-          2. Cross-Encoder scores all (query, candidate_doc) pairs in a single FP16 batch and
-             enforces a calibrated sigmoid probability safety gate (`rerank_prob_threshold`).
+        Two-stage decoupled search:
+          1. Bi-encoder queries against HNSW index of search surfaces (K=10).
+          2. Cross-encoder reranks top-10 candidates using their search surface.
+          3. Returns full protocol document for validated matches.
         """
         t0 = time.perf_counter()
         query_vector = self.embed_query(query_text)
@@ -250,11 +263,11 @@ class RAGVectorStore:
 
         min_distance = float(distances[0][0])
 
-        # Stage-1 Lenient Bi-Encoder Filter
         candidates = [
             {
                 "id": doc_id,
                 "document": self.strip_sources_footer(doc_text),
+                "search_surface": meta.get("search_surface") or self.extract_search_surface(doc_text),
                 "metadata": meta,
                 "distance": round(float(dist), 4),
                 "rerank_prob": 0.0,
@@ -275,11 +288,10 @@ class RAGVectorStore:
                 "results": [],
             }
 
-       # Stage-2 Cross-Encoder Reranking & Calibrated OOD Safety Circuit Breaker
+        # Stage 2: Cross-Encoder scores query strictly against the search surface
         t_rerank_start = time.perf_counter()
         if use_reranker and self.reranker is not None:
-            pairs = [[query_text, c["document"]] for c in candidates]
-            # Force raw logits via Identity() to avoid double-sigmoid compression
+            pairs = [[query_text, c["search_surface"]] for c in candidates]
             raw_logits = self.reranker.predict(
                 pairs,
                 batch_size=len(pairs),

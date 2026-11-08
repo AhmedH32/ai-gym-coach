@@ -6,6 +6,12 @@
 
 **Mechanism of Irritation:** Tearing of the superior glenoid labrum near the attachment of the long head of the biceps tendon, triggered by traction forces, peel-back mechanism in external rotation, or overhead stress.
 
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** [deep inside the shoulder socket, top of the shoulder, front of the shoulder near the bicep tendon, glenohumeral joint]
+* **Sensation Character:** [deep catching sensation, sharp pinch on overhead lockout, dull ache inside the joint, sudden locking or popping]
+* **Provocative Gym Lifts & Angles:** [heavy overhead barbell presses at full extension, kipping pull-ups at the bottom dead-hang, heavy barbell bench press with flared elbows, heavy barbell curls on the negative]
+* **Gym-Floor Slang Cues:** [ै"my shoulder catches and clicks at the top of a press", "feels like a knife stabbing deep inside the socket on pull-ups", "deep ache right in the front of my shoulder when curling heavy"]
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * Heavy biceps curls with heavy eccentric loading (biceps traction)

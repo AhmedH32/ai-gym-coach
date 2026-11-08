@@ -6,6 +6,12 @@
 
 **Mechanism of Irritation:** Compression and recalcitrant tendinosis of the gluteus medius/minimus tendons and overlying trochanteric bursa against the greater trochanter during hip adduction.
 
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** outer hip bone, greater trochanter, lateral hip, side of upper thigh
+* **Sensation Character:** sharp deep ache, hot burning laterally, dull throbbing when side-sleeping, localized tenderness
+* **Provocative Gym Lifts & Angles:** narrow-stance sumo deadlifts, cross-body cable kickbacks in full adduction, deep step-ups with pelvis drop, side-lying leg raises past midline
+* **Gym-Floor Slang Cues:** "my outer hip is burning when I narrow squat", "deep hip pain if my knee caving in", "side hip feels bruised after sleeping on it"
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * Cross-body hip adduction stretches under load (e.g., IT band cross stretches)

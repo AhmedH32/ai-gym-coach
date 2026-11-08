@@ -6,6 +6,12 @@
 
 **Mechanism of Irritation:** Repetitive tensile overload or compressive impingement causing micro-tears, collagen disorganization, and localized vascular compromise in the rotator cuff tendons (supraspinatus, infraspinatus, subscapularis, teres minor).
 
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** outer shoulder, top of the arm, front of the shoulder joint, supraspinatus insertion
+* **Sensation Character:** dull ache at rest, sharp catching overhead, deep grinding in the socket, burning under load
+* **Provocative Gym Lifts & Angles:** heavy overhead presses, deep barbell bench press at 90-degree elbow flare, snatches, behind-the-neck pulldowns, wide-grip dips
+* **Gym-Floor Slang Cues:** "my shoulder catches every time I lock out overhead", "deep dull ache sleeping on that side", "pinching right at the top of the shoulder during bench"
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * Heavy explosive overhead lifting (e.g., snatch, push jerk)

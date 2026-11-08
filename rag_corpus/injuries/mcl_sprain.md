@@ -6,6 +6,12 @@
 
 **Mechanism of Irritation:** Valgus stress or lateral blow to the knee causing overstretching or tearing of the medial collateral ligament fibers on the inner aspect of the joint.
 
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** [inside of the knee, inner joint line, medial knee capsule, MCL insertion]
+* **Sensation Character:** [sharp catching pain, dull inner-knee ache, unstable giving-way feeling, pulling tension under load]
+* **Provocative Gym Lifts & Angles:** [wide-stance sumo squats, side lunges, lateral cutting drills, heavy leg press with knees caving in]
+* **Gym-Floor Slang Cues:** ["my inner knee feels totally loose and ready to gap", "sharp pinch on the inside when my knees cave in", "feels like my knee is buckling outward during heavy squats"]
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * Wide-stance sumo squats or side lunges inducing valgus torque

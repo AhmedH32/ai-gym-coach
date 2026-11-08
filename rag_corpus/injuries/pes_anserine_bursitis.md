@@ -6,6 +6,12 @@
 
 **Mechanism of Irritation:** Inflammation of the bursa underlying the pes anserinus tendon insertion (sartorius, gracilis, semitendinosus) on the anteromedial proximal tibia, caused by friction and valgus knee stress.
 
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** [inside of shin, medial proximal tibia, below knee crease on the inside, pes anserine insertion]
+* **Sensation Character:** [sharp knife-like jab, nagging ache on the inside, burning friction, morning stiffness on first steps]
+* **Provocative Gym Lifts & Angles:** [sumo deadlifts, wide-stance squats past parallel, seated hamstring curls with turned-in toes, lateral lunges]
+* **Gym-Floor Slang Cues:** ["burning right on the inside of my shin when I squat wide", "sharp pinch on the inside of the knee coming out of the hole", "it feels like friction right below the knee joint on heavy leg curls"]
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * Heavy seated hamstring curls into full flexion with internal tibial rotation

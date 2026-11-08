@@ -6,6 +6,12 @@
 
 **Mechanism of Irritation:** Overstretching or tearing of paraspinous muscles and tendons in the neck region, often aggravated by sudden neck extension, heavy shrugging, or poor forward-head posture under axial load.
 
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** base of the skull, upper trap ridge, side of the neck, upper back near shoulder blade
+* **Sensation Character:** sharp catch on rotation, deep gnawing knot, hot burning spasm, stiff morning lock-up
+* **Provocative Gym Lifts & Angles:** heavy barbell shrugs, top locked-out overhead presses with neck cranked forward, wrestler bridges, heavy deadlifts with cranked neck extension
+* **Gym-Floor Slang Cues:** "my trap zapped me at the top of that pull", "can't turn my head to spot my bench press", "feels like a jammed knife at the base of my neck when I lock out"
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * Behind-the-head neck harness extensions under heavy load

@@ -6,6 +6,12 @@
 
 **Mechanism of Irritation:** Traction or compression of the ulnar nerve within the cubital tunnel on the medial aspect of the elbow, exacerbated by prolonged deep elbow flexion and direct pressure.
 
+## Colloquial Symptom Presentation & Provocative Triggers
+* **Anatomical Pain Sites:** Medial elbow groove, funny bone area, inner elbow, ring and pinky finger side of hand
+* **Sensation Character:** Electric zapping shock, tingling numbness in outer fingers, deep dull aching inner elbow pain, burning grip weakness
+* **Provocative Gym Lifts & Angles:** Preacher curls loaded past 90 degrees flexion, heavy overhead triceps extensions, skull crushers at deep end-range bend, close-grip bench press
+* **Gym-Floor Slang Cues:** "My funny bone shoots sparks when I bend my arm", "pinky and ring fingers go completely dead mid-set", "inner elbow zaps when locked into the preacher bench"
+
 ## Absolute Contraindications (Exercises to Avoid)
 
 * High-repetition deep-flexion triceps extensions held in full bend
