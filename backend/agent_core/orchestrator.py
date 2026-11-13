@@ -166,7 +166,7 @@ CONTRASTIVE_FEW_SHOTS = [
             "Flared elbows (>70°) compress the supraspinatus tendon beneath the acromion bone.\n\n"
             "### Immediate Action Plan:\n"
             "1. **Pause Flat Barbell Benching:** Switch to neutral-grip dumbbell pressing in the scapular plane.\n"
-            "2. **Implement Wall Isometrics:** Perform 3 sets of 30-second external rotation holds against a wall to depressive the humeral head."
+            "2. **Implement Wall Isometrics:** Perform 3 sets of 30-second external rotation holds against a wall to depress the humeral head."
         ),
     },
     # Exemplar 3: Pain-Free Catalog Workout (Verified Catalog IDs)
@@ -239,11 +239,22 @@ class GymCoachOrchestrator:
         rag_tools: Optional[ClinicalRAGTools] = None,
         router: Optional[VelaSystemOneRouter] = None,
         coprocessor_device: Optional[str] = None,
+        router_concurrency: int = 3,
+        rag_concurrency: int = 2,
     ):
         self.vllm_base_url = os.environ.get("VLLM_BASE_URL", vllm_base_url).rstrip("/")
         self.base_model = os.environ.get("BASE_MODEL_NAME", base_model_name)
         self.adapter_model = os.environ.get("ADAPTER_NAME", adapter_model_name)
         self.project_root = project_root or Path(__file__).resolve().parent.parent.parent
+
+        # Stage-decoupled concurrency semaphores (Triton instance_group pattern):
+        # Bounds concurrent GPU activation graphs on cuda:0 while pipelining CPU/GPU work.
+        self._router_sem = asyncio.Semaphore(
+            int(os.environ.get("ROUTER_CONCURRENCY", str(router_concurrency)))
+        )
+        self._rag_sem = asyncio.Semaphore(
+            int(os.environ.get("RAG_CONCURRENCY", str(rag_concurrency)))
+        )
 
         self.http_client = httpx.AsyncClient(
             timeout=90.0,
@@ -259,7 +270,11 @@ class GymCoachOrchestrator:
             if p.exists():
                 with open(p, "r", encoding="utf-8") as f:
                     raw_exercises = json.load(f)
-                    exercises_list = raw_exercises if isinstance(raw_exercises, list) else raw_exercises.get("exercises", [])
+                    exercises_list = (
+                        raw_exercises
+                        if isinstance(raw_exercises, list)
+                        else raw_exercises.get("exercises", [])
+                    )
                     for ex in exercises_list:
                         self.catalog_lookup[ex["id"]] = ex
                 print(f"✓ Orchestrator indexed {len(self.catalog_lookup)} catalog exercises.")
@@ -388,8 +403,9 @@ class GymCoachOrchestrator:
     ) -> OrchestratorResponse:
         t_start = time.perf_counter()
 
-        # 1. System-1 Decision Encoder Router
-        decision: RouterDecision = await asyncio.to_thread(self.router.route, user_query)
+        # 1. System-1 Decision Encoder Router (Bounded GPU concurrency: max 3 in-flight)
+        async with self._router_sem:
+            decision: RouterDecision = await asyncio.to_thread(self.router.route, user_query)
 
         # Class 0: Acute Emergency Circuit Breaker
         if decision.intent == "CLASS_0_RED_FLAG":
@@ -417,7 +433,9 @@ class GymCoachOrchestrator:
         rag_latency_ms = 0.0
 
         if is_clinical:
-            medical_res = await asyncio.to_thread(self.tools.search_medical_db, user_query)
+            # Bounded Two-Stage Clinical RAG (max 2 in-flight on GPU)
+            async with self._rag_sem:
+                medical_res = await asyncio.to_thread(self.tools.search_medical_db, user_query)
             rag_latency_ms = medical_res.latency_ms
 
             if medical_res.triage_required or medical_res.status != "MATCH_FOUND":
@@ -441,7 +459,11 @@ class GymCoachOrchestrator:
                     },
                 )
 
-            equip_note = f"Equipment Available: {decision.catalog_equipment_arg}\n" if decision.catalog_equipment_arg else ""
+            equip_note = (
+                f"Equipment Available: {decision.catalog_equipment_arg}\n"
+                if decision.catalog_equipment_arg
+                else ""
+            )
             if decision.wants_workout_program:
                 directive = (
                     "EXECUTION DIRECTIVE: Prescribe a concise coaching explanation in Markdown, "

@@ -1,0 +1,101 @@
+# .github/workflows/main_cd.yml
+name: AI Gym Coach v2.5 — Production ML CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "backend/**"
+      - "prompt_assets/**"
+      - "rag_corpus/injuries/**"
+      - "raw_data/**"
+      - "deploy_modal.py"
+      - ".github/workflows/main_cd.yml"
+  workflow_dispatch:
+    inputs:
+      force_reingest:
+        description: "Force GPU ChromaDB reconciliation & Cross-Encoder regression gate"
+        required: false
+        default: "false"
+        type: boolean
+      force_slo_gate:
+        description: "Force Full-Stack TTFT/ITL & 8-User Burst SLO Gate"
+        required: false
+        default: "true"
+        type: boolean
+
+jobs:
+  ml_ci_cd_pipeline:
+    name: Validate, Verify Hardware SLOs & Deploy Modal Gateway
+    runs-on: ubuntu-latest
+    env:
+      MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+      MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+
+    steps:
+      - name: Checkout Repository (Fetch HEAD & HEAD~1 for Diff Detection)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Gate 1 — Static Corpus & Schema Contract Verification (CPU)
+        run: |
+          python -c "
+          from pathlib import Path
+          injuries_dir = Path('rag_corpus/injuries')
+          cards = list(injuries_dir.glob('*.md'))
+          assert len(cards) == 40, f'Expected 40 clinical injury cards, found {len(cards)}'
+          for c in cards:
+              text = c.read_text(encoding='utf-8').strip()
+              assert len(text) > 200, f'Card {c.name} is unexpectedly empty or truncated!'
+          p_dir = Path('prompt_assets/periodization')
+          p_cards = list(p_dir.glob('*.md'))
+          assert len(p_cards) >= 5, f'Expected >= 5 periodization cards in prompt_assets, found {len(p_cards)}'
+          print(f'✓ Gate 1 Passed: Verified {len(cards)} clinical cards and {len(p_cards)} periodization assets.')
+          "
+
+      - name: Install Modal CLI
+        run: pip install --upgrade modal
+
+      - name: Detect Differential Changes (Corpus vs. Engine/Orchestrator)
+        id: diff_check
+        run: |
+          CHANGED_FILES=$(git diff --name-only HEAD~1 HEAD || echo "deploy_modal.py")
+          echo "Changed files in this commit:"
+          echo "$CHANGED_FILES"
+
+          # 1. Check if Clinical RAG Corpus or Vector Store changed
+          if [ "${{ github.event.inputs.force_reingest }}" == "true" ]; then
+            echo "run_ingest=true" >> $GITHUB_OUTPUT
+          elif echo "$CHANGED_FILES" | grep -E '^(rag_corpus/injuries/|backend/rag_engine/)'; then
+            echo "run_ingest=true" >> $GITHUB_OUTPUT
+          else
+            echo "run_ingest=false" >> $GITHUB_OUTPUT
+          fi
+
+          # 2. Check if Agent Core, Prompts, or Modal Deployment Config changed
+          if [ "${{ github.event.inputs.force_slo_gate }}" == "true" ]; then
+            echo "run_slo_gate=true" >> $GITHUB_OUTPUT
+          elif echo "$CHANGED_FILES" | grep -E '^(backend/|prompt_assets/|deploy_modal\.py)'; then
+            echo "run_slo_gate=true" >> $GITHUB_OUTPUT
+          else
+            echo "run_slo_gate=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Gate 2 — Transactional ChromaDB Reconcile & Cross-Encoder Recall/OOD Gate (GPU)
+        if: steps.diff_check.outputs.run_ingest == 'true'
+        run: modal run deploy_modal.py::ingest_and_verify_corpus
+
+      - name: Gate 3 — Isolated Staging TTFT, ITL, Concurrency & VRAM SLO Gate (GPU)
+        if: steps.diff_check.outputs.run_slo_gate == 'true'
+        run: modal run deploy_modal.py::verify_system_slos
+
+      - name: Gate 4 — Zero-Downtime Production Rollout (L4 / A10G / L40S)
+        run: modal deploy deploy_modal.py

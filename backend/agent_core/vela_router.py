@@ -1,6 +1,7 @@
 # backend/agent_core/vela_router.py
 import importlib
 import os
+import shutil
 import sys
 import time
 from pathlib import Path
@@ -28,39 +29,46 @@ class RouterDecision(BaseModel):
     latency_ms: float = 0.0
     raw_answers: Dict[str, Any] = Field(default_factory=dict)
 
+    @property
+    def confidence(self) -> float:
+        return self.intent_confidence
+
 
 ROUTER_QUESTIONS: Dict[str, Dict[str, Any]] = {
     "intent": {
         "type": "choice",
         "instructions": (
-            "Classify the athlete's request. CRITICAL RULE: If the athlete mentions ANY pain, burning, "
-            "pinching, barking tendon, or discomfort—even while asking for a workout—choose CLASS_1_CLINICAL_RAG."
+            "Classify the athlete's primary intent into one of the four categories below. "
+            "If the athlete reports any pain, burning, pinching, aching, or barking tendon—even while "
+            "requesting a workout—classify as CLASS_1_CLINICAL_RAG."
         ),
         "criteria": {
             "CLASS_0_RED_FLAG": (
-                "Life-threatening emergency or severe acute trauma: crushing chest pain, shortness of breath, "
-                "loss of bladder/bowel control, saddle numbness, loud audible pop with muscle balling up and purple bruising, "
-                "joint dislocation, or bone fracture."
+                "Life-threatening emergency or severe acute trauma: crushing chest tightness radiating to jaw or arm, "
+                "shortness of breath, loss of bladder or bowel control, saddle numbness, loud audible pop with muscle "
+                "retraction or bruising, joint dislocation, or bone fracture."
             ),
             "CLASS_1_CLINICAL_RAG": (
-                "ANY mention of musculoskeletal pain, burning, pinching, aching, barking tendon, tendonitis, strain, "
-                "sprain, or finger tingling—whether asking what happened OR asking for a workout around the pain."
+                "Musculoskeletal injury, joint pain, tendon burning, pinching, aching, barking kneecap, elbow burning "
+                "on grip, heel stabbing, or lift-provoked discomfort—including requests to give or prescribe a modified "
+                "workout session or rehab routine around the symptom."
             ),
             "CLASS_2_CATALOG_WORKOUT": (
-                "100% PAIN-FREE workout request: athlete reports ZERO pain, ZERO burning, and ZERO injury symptoms, "
-                "and asks for a workout routine for specific muscles or equipment."
+                "Standard hypertrophy, strength, or conditioning workout routine generation for target muscle groups "
+                "and gym equipment by a healthy athlete."
             ),
             "CLASS_3_DIRECT_COACHING": (
-                "Theoretical coaching question about periodization, 1RM plateaus/stalls, deload weeks, "
-                "weekly set volume (MEV/MAV/MRV), or lifting form/technique without requesting a workout."
+                "General strength training theory, periodization, optimal rest periods between compound and isolation "
+                "sets, training to muscular failure, deload week structure, weekly set volume (MEV/MAV/MRV), RPE "
+                "autoregulation, or exercise execution technique without requesting a workout."
             ),
         },
     },
     "wants_workout_program": {
         "type": "noul",
         "instructions": (
-            "Is the athlete explicitly asking you to build, give, or prescribe a workout routine or training session "
-            "for them to perform (as opposed to asking 'what happened?', 'how should I deload?', or a form question)?"
+            "Is the athlete asking for a workout routine, training session, or asking if they can get a workout in today "
+            "(as opposed to asking 'what happened?', 'how should I deload?', or a form question)?"
         ),
     },
     "target_muscle": {
@@ -130,7 +138,10 @@ ROUTER_QUESTIONS: Dict[str, Dict[str, Any]] = {
 class VelaSystemOneRouter:
     """
     System-1 Bidirectional Decision Encoder (`vllm-sr/vela3-fast`, 380M UltraBERT backbone).
-    Executes on Turing sm_75 using FP16 Tensor Core autocast (`torch.float16`).
+    Keeps native float32 master weights for full numerical stability while executing
+    with hardware-adaptive Tensor Core autocast:
+      - Ampere (sm_86, A10G) / Ada Lovelace (sm_89, L4, L40S): Native bfloat16 autocast.
+      - Turing (sm_75, T4): High-throughput float16 autocast fallback.
     """
 
     def __init__(
@@ -150,6 +161,11 @@ class VelaSystemOneRouter:
             self.device = "cpu"
 
         self.secondary_slot_threshold = secondary_slot_threshold
+        self.autocast_dtype = (
+            torch.bfloat16
+            if (torch.cuda.is_available() and torch.cuda.is_bf16_supported())
+            else torch.float16
+        )
 
         local_dir = Path(
             snapshot_download(
@@ -158,19 +174,7 @@ class VelaSystemOneRouter:
             )
         )
 
-        # Deterministic, safe line replacement to enable FP16 Tensor Cores without regex corruption
-        enc_file = local_dir / "vela3_encoder.py"
-        if enc_file.exists():
-            raw_lines = enc_file.read_text(encoding="utf-8").splitlines()
-            clean_lines = []
-            for line in raw_lines:
-                if "amp = torch.autocast(" in line:
-                    clean_lines.append(
-                        '        amp = torch.autocast("cuda", dtype=torch.float16, enabled=str(self.device).startswith("cuda"))'
-                    )
-                else:
-                    clean_lines.append(line)
-            enc_file.write_text("\n".join(clean_lines), encoding="utf-8")
+        self._sanitize_vela3_artifacts(local_dir)
 
         if str(local_dir) not in sys.path:
             sys.path.insert(0, str(local_dir))
@@ -181,6 +185,50 @@ class VelaSystemOneRouter:
 
         self.encoder = DecisionEncoder.load(local_dir, device=self.device)
         _ = self.route("Warmup query for chest workout with dumbbells.")
+
+    @staticmethod
+    def _sanitize_vela3_artifacts(local_dir: Path) -> None:
+        """
+        Ensures vela3_encoder.py retains native float32 master weights while
+        dispatching hardware-adaptive bfloat16 (sm_80+) / float16 (sm_75) autocast.
+        """
+        enc_file = local_dir / "vela3_encoder.py"
+        if enc_file.exists():
+            enc_code = enc_file.read_text(encoding="utf-8")
+            modified = False
+
+            # Defensively restore native float32 master weights if ever modified
+            custom_dtype_str = "dtype=(torch.bfloat16 if (torch.cuda.is_available() and torch.cuda.is_bf16_supported()) else torch.float16)"
+            if custom_dtype_str in enc_code:
+                enc_code = enc_code.replace(custom_dtype_str, "dtype=torch.float32")
+                modified = True
+
+            if ".last_hidden_state.float()" in enc_code:
+                enc_code = enc_code.replace(".last_hidden_state.float()", ".last_hidden_state")
+                modified = True
+
+            # Configure hardware-adaptive BF16/FP16 autocast
+            if "_dtype = torch.bfloat16" not in enc_code:
+                raw_lines = enc_code.splitlines()
+                clean_lines = []
+                for line in raw_lines:
+                    if "amp = torch.autocast(" in line:
+                        clean_lines.append(
+                            '        _dtype = torch.bfloat16 if (torch.cuda.is_available() and torch.cuda.is_bf16_supported()) else torch.float16\n'
+                            '        amp = torch.autocast("cuda", dtype=_dtype, enabled=str(self.device).startswith("cuda"))'
+                        )
+                    else:
+                        clean_lines.append(line)
+                enc_code = "\n".join(clean_lines)
+                modified = True
+
+            if modified:
+                enc_file.write_text(enc_code, encoding="utf-8")
+                hf_home = Path(os.environ.get("HF_HOME", Path.home() / ".cache" / "huggingface"))
+                modules_cache = hf_home / "modules" / "transformers_modules"
+                if modules_cache.exists():
+                    shutil.rmtree(modules_cache, ignore_errors=True)
+                print("✓ Configured vela3_encoder.py (native FP32 master weights + adaptive BF16/FP16 autocast).")
 
     @staticmethod
     def _extract_noul_prob(block: Dict[str, Any]) -> float:
@@ -195,7 +243,8 @@ class VelaSystemOneRouter:
 
     def route(self, query: str) -> RouterDecision:
         t0 = time.perf_counter()
-        raw_out = self.encoder.predict(query, ROUTER_QUESTIONS)
+        with torch.inference_mode():
+            raw_out = self.encoder.predict(query, ROUTER_QUESTIONS)
         latency_ms = round((time.perf_counter() - t0) * 1000.0, 2)
 
         if isinstance(raw_out, tuple):
