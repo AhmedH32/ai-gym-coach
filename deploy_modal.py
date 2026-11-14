@@ -204,6 +204,7 @@ def verify_system_slos() -> dict:
         sys.executable, "-m", "vllm.entrypoints.openai.api_server",
         "--model", "Qwen/Qwen2.5-7B-Instruct-AWQ",
         "--quantization", "awq_marlin",
+        "--safetensors-load-strategy", "prefetch",
         "--dtype", "half",
         "--max-model-len", "8192",
         "--gpu-memory-utilization", "0.75",
@@ -255,8 +256,8 @@ def verify_system_slos() -> dict:
             json={
                 "model": "Qwen/Qwen2.5-7B-Instruct-AWQ",
                 "messages": warmup_msgs,
-                "max_tokens": 8,
-                "temperature": 0.0,
+                "max_tokens": 2,
+                "temperature": 0.1,
             },
             timeout=60.0,
         )
@@ -284,7 +285,7 @@ def verify_system_slos() -> dict:
                 "model": "Qwen/Qwen2.5-7B-Instruct-AWQ",
                 "messages": stream_msgs,
                 "max_tokens": 64,
-                "temperature": 0.0,
+                "temperature": 0.1,
                 "stream": True,
             },
             timeout=30.0,
@@ -427,6 +428,7 @@ class GymCoachService:
             sys.executable, "-m", "vllm.entrypoints.openai.api_server",
             "--model", "Qwen/Qwen2.5-7B-Instruct-AWQ",
             "--quantization", "awq_marlin",
+            "--safetensors-load-strategy", "prefetch",
             "--dtype", "half",
             "--max-model-len", "8192",
             "--gpu-memory-utilization", "0.75",
@@ -490,8 +492,8 @@ class GymCoachService:
             json={
                 "model": "Qwen/Qwen2.5-7B-Instruct-AWQ",
                 "messages": warmup_msgs,
-                "max_tokens": 1,
-                "temperature": 0.0,
+                "max_tokens": 2,
+                "temperature": 0.1,
             },
             timeout=60.0,
         )

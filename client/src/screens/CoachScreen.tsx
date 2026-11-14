@@ -1,31 +1,88 @@
+// client/src/screens/CoachScreen.tsx
 import React, { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, FlatList, KeyboardAvoidingView, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ChatMessage, Routine } from '../types';
 import { StorageService } from '../storage/storageService';
-import { postCoachQuery } from '../api/coachApi';
+import { postCoachQuery, warmupCoachServer } from '../api/coachApi';
 import { Colors } from '../theme/colors';
 import ChatBubble from '../components/coach/ChatBubble';
+
+const COACHING_LOADING_STAGES = [
+  'Analyzing movement mechanics & training context...',
+  'Cross-referencing clinical sports medicine protocols...',
+  'Evaluating muscle recovery state & equipment options...',
+  'Building your personalized sets, reps & coaching cues...',
+];
 
 export default function CoachScreen() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loadingStageIndex, setLoadingStageIndex] = useState(0);
   const flatListRef = useRef<FlatList<ChatMessage>>(null);
 
   useEffect(() => {
     let mounted = true;
+    // Speculative Pre-Warming Edge 1: Wake container as soon as user enters Coach tab
+    warmupCoachServer();
+
     StorageService.getChatHistory().then((history) => {
       if (!mounted) return;
-      setMessages(history.length > 0 ? history : [{ id: 'welcome', sender: 'assistant', timestamp: Date.now(), text: "Welcome to your AI Strength & Clinical Coach. Ask about lifting mechanics, fatigue management, or report an injury or symptom and I'll prescribe a pain-sparing session." }]);
+      setMessages(
+        history.length > 0
+          ? history
+          : [
+              {
+                id: 'welcome',
+                sender: 'assistant',
+                timestamp: Date.now(),
+                text: "Welcome to your AI Strength & Clinical Coach. Ask about lifting mechanics, fatigue management, or report an injury or symptom and I'll prescribe a pain-sparing session.",
+              },
+            ],
+      );
     });
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
+
+  // Progressive natural status messages if request catches a cold start
+  useEffect(() => {
+    if (!loading) {
+      setLoadingStageIndex(0);
+      return;
+    }
+    const timers = [
+      setTimeout(() => setLoadingStageIndex(1), 4000),
+      setTimeout(() => setLoadingStageIndex(2), 10000),
+      setTimeout(() => setLoadingStageIndex(3), 18000),
+    ];
+    return () => {
+      timers.forEach(clearTimeout);
+    };
+  }, [loading]);
 
   const handleSend = async () => {
     const query = inputText.trim();
     if (!query || loading) return;
-    const userMessage: ChatMessage = { id: `${Date.now()}`, sender: 'user', timestamp: Date.now(), text: query };
+    const userMessage: ChatMessage = {
+      id: `${Date.now()}`,
+      sender: 'user',
+      timestamp: Date.now(),
+      text: query,
+    };
     setMessages((previous) => [...previous, userMessage]);
     setInputText('');
     setLoading(true);
@@ -45,8 +102,14 @@ export default function CoachScreen() {
       setMessages((previous) => [...previous, assistantMessage]);
       await StorageService.saveChatMessage(assistantMessage);
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unable to contact inference gateway.';
-      const errorMessage: ChatMessage = { id: `${Date.now()}-error`, sender: 'assistant', timestamp: Date.now(), text: `Error: ${message}\n\nPlease verify that your backend ngrok tunnel is live and reachable.` };
+      const message =
+        error instanceof Error ? error.message : 'Unable to contact inference gateway.';
+      const errorMessage: ChatMessage = {
+        id: `${Date.now()}-error`,
+        sender: 'assistant',
+        timestamp: Date.now(),
+        text: `Unable to reach the AI Coach service (${message}). Please check your connection and try again.`,
+      };
       setMessages((previous) => [...previous, errorMessage]);
       await StorageService.saveChatMessage(errorMessage);
     } finally {
@@ -80,17 +143,29 @@ export default function CoachScreen() {
     };
     await StorageService.saveRoutine(newRoutine);
     await StorageService.updateProposalStatus(messageId, 'accepted');
-    setMessages((previous) => previous.map((message) => message.id === messageId ? { ...message, proposalStatus: 'accepted' } : message));
+    setMessages((previous) =>
+      previous.map((message) =>
+        message.id === messageId ? { ...message, proposalStatus: 'accepted' } : message,
+      ),
+    );
   };
 
   const handleDeclineProposal = async (messageId: string) => {
     await StorageService.updateProposalStatus(messageId, 'declined');
-    setMessages((previous) => previous.map((message) => message.id === messageId ? { ...message, proposalStatus: 'declined' } : message));
+    setMessages((previous) =>
+      previous.map((message) =>
+        message.id === messageId ? { ...message, proposalStatus: 'declined' } : message,
+      ),
+    );
   };
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      >
         <View style={styles.pageHeader}>
           <View style={styles.coachAvatar}>
             <Ionicons name="sparkles" size={18} color="#FFFFFF" />
@@ -110,12 +185,37 @@ export default function CoachScreen() {
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
-          renderItem={({ item }) => <ChatBubble message={item} onAcceptProposal={handleAcceptProposal} onDeclineProposal={handleDeclineProposal} />}
+          renderItem={({ item }) => (
+            <ChatBubble
+              message={item}
+              onAcceptProposal={handleAcceptProposal}
+              onDeclineProposal={handleDeclineProposal}
+            />
+          )}
         />
-        {loading ? <View style={styles.loadingBar}><ActivityIndicator size="small" color={Colors.accent} /><Text style={styles.loadingText}>Synthesizing biomechanical & clinical guidance...</Text></View> : null}
+        {loading ? (
+          <View style={styles.loadingBar}>
+            <ActivityIndicator size="small" color={Colors.accent} />
+            <Text style={styles.loadingText}>{COACHING_LOADING_STAGES[loadingStageIndex]}</Text>
+          </View>
+        ) : null}
         <View style={styles.inputBar}>
-          <TextInput style={styles.textInput} placeholder="Ask coach or describe injury..." placeholderTextColor={Colors.textMuted} value={inputText} onChangeText={setInputText} multiline maxLength={500} />
-          <TouchableOpacity style={[styles.sendButton, (!inputText.trim() || loading) && styles.sendButtonDisabled]} onPress={handleSend} disabled={!inputText.trim() || loading} accessibilityLabel="Send message">
+          <TextInput
+            style={styles.textInput}
+            placeholder="Ask coach or describe injury..."
+            placeholderTextColor={Colors.textMuted}
+            value={inputText}
+            onChangeText={setInputText}
+            onFocus={() => warmupCoachServer()}
+            multiline
+            maxLength={500}
+          />
+          <TouchableOpacity
+            style={[styles.sendButton, (!inputText.trim() || loading) && styles.sendButtonDisabled]}
+            onPress={handleSend}
+            disabled={!inputText.trim() || loading}
+            accessibilityLabel="Send message"
+          >
             <Ionicons name="arrow-up" size={20} color="#FFFFFF" />
           </TouchableOpacity>
         </View>
@@ -127,19 +227,77 @@ export default function CoachScreen() {
 const styles = StyleSheet.create({
   safeArea: { flex: 1, backgroundColor: Colors.background },
   container: { flex: 1 },
-  pageHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 16, paddingBottom: 12, backgroundColor: Colors.background },
-  coachAvatar: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: Colors.accent },
+  pageHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 12,
+    backgroundColor: Colors.background,
+  },
+  coachAvatar: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.accent,
+  },
   headerCopy: { flex: 1, marginLeft: 10 },
   eyebrow: { color: Colors.accent, fontSize: 9, fontWeight: '800', letterSpacing: 1.2 },
   pageTitle: { color: Colors.textPrimary, fontSize: 24, fontWeight: '900', marginTop: 2 },
-  onlineBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 9, paddingVertical: 6, borderRadius: 16, backgroundColor: Colors.rehabGlow },
+  onlineBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: Colors.rehabGlow,
+  },
   onlineDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: Colors.rehab, marginRight: 5 },
   onlineText: { color: Colors.rehab, fontSize: 10, fontWeight: '800' },
   listContent: { padding: 16, paddingBottom: 20 },
-  loadingBar: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 8, backgroundColor: Colors.surface, borderTopWidth: 1, borderTopColor: Colors.surfaceBorder },
+  loadingBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    backgroundColor: Colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: Colors.surfaceBorder,
+  },
   loadingText: { color: Colors.textSecondary, fontSize: 12, fontWeight: '600', marginLeft: 8 },
-  inputBar: { flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 12, paddingVertical: 10, backgroundColor: Colors.surface, borderTopWidth: 1, borderTopColor: Colors.surfaceBorder, gap: 8 },
-  textInput: { flex: 1, minHeight: 40, maxHeight: 100, backgroundColor: Colors.background, borderWidth: 1, borderColor: Colors.surfaceBorder, borderRadius: 20, color: Colors.textPrimary, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 10, fontSize: 14 },
-  sendButton: { width: 40, height: 40, borderRadius: 20, backgroundColor: Colors.accent, justifyContent: 'center', alignItems: 'center' },
+  inputBar: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: Colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: Colors.surfaceBorder,
+    gap: 8,
+  },
+  textInput: {
+    flex: 1,
+    minHeight: 40,
+    maxHeight: 100,
+    backgroundColor: Colors.background,
+    borderWidth: 1,
+    borderColor: Colors.surfaceBorder,
+    borderRadius: 20,
+    color: Colors.textPrimary,
+    paddingHorizontal: 16,
+    paddingTop: 10,
+    paddingBottom: 10,
+    fontSize: 14,
+  },
+  sendButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.accent,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   sendButtonDisabled: { backgroundColor: Colors.surfaceBorder, opacity: 0.6 },
 });
