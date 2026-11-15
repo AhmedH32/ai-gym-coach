@@ -1,6 +1,6 @@
 # AI Gym Coach (v2.5) — Compound AI Biomechanical RAG & High-Throughput GPU Serving Engine
 
-[![Live Web Demo](https://img.shields.io/badge/Live_Web_App-Vercel_(Zero--Install_Demo)-000000?logo=vercel&logoColor=white)](https://ai-gym-coach.vercel.app)
+[![Live Web Demo](https://img.shields.io/badge/Live_Web_App-Vercel_(Zero--Install_Demo)-000000?logo=vercel&logoColor=white)](https://ai-gym-coach-nine.vercel.app)
 [![Live API Gateway](https://img.shields.io/badge/Modal_Serverless_API-Swagger_UI_(/docs)-00D26A?logo=fastapi&logoColor=white)](https://ahmed-h-moustafa2003--ai-gym-coach-v2-gymcoachservice-api.us-east.modal.run/docs)
 [![LLM Engine](https://img.shields.io/badge/vLLM_v0.22+-AWQ_Marlin_%7C_FlashAttention--2-7B3FE4)](https://github.com/vllm-project/vllm)
 [![System-1 Router](https://img.shields.io/badge/System--1_Router-Vela--3_Fast_(380M_BF16)-FF6B00)](https://huggingface.co/vllm-sr/vela3-fast)
@@ -18,7 +18,7 @@ Engineered to eliminate generative hallucinations, acute medical triage failures
 
 ## Live Interactive Endpoints & Instant Verification
 
-* **🌐 Live Interactive Web Application (Vercel):** [**`https://ai-gym-coach.vercel.app`**](https://ai-gym-coach.vercel.app) *(Automatically triggers speculative GPU pre-warming on page load).*
+* **🌐 Live Interactive Web Application (Vercel):** [**`https://ai-gym-coach-nine.vercel.app`**](https://ai-gym-coach-nine.vercel.app) *(Automatically triggers speculative GPU pre-warming on page load).*
 * **⚡ Interactive OpenAPI / Swagger Playground (`/docs`):** [**`https://ahmed-h-moustafa2003--ai-gym-coach-v2-gymcoachservice-api.us-east.modal.run/docs`**](https://ahmed-h-moustafa2003--ai-gym-coach-v2-gymcoachservice-api.us-east.modal.run/docs)
 * **🩺 Live GPU Hardware & VRAM Health Probe (`GET /health`):** [**`https://ahmed-h-moustafa2003--ai-gym-coach-v2-gymcoachservice-api.us-east.modal.run/health`**](https://ahmed-h-moustafa2003--ai-gym-coach-v2-gymcoachservice-api.us-east.modal.run/health)
 * **📱 Standalone Android Release APK:** Available under [**GitHub Releases**](https://github.com/AhmedH32/ai-gym-coach/releases)
