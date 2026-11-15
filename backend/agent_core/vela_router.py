@@ -11,6 +11,9 @@ import torch
 from huggingface_hub import snapshot_download
 from pydantic import BaseModel, Field
 
+# Pinned immutable upstream revision of vllm-sr/vela3-fast
+VELA3_PINNED_REVISION = "fa60e3aa41132c60bf05a84cabfdced39cb6d4f7"
+
 
 class RouterDecision(BaseModel):
     """Structured output of the single-pass batched Vela 3.0 Fast System-1 Router."""
@@ -167,10 +170,20 @@ class VelaSystemOneRouter:
             else torch.float16
         )
 
+        # Restrict allow_patterns to strictly required runtime artifacts and pin commit hash
         local_dir = Path(
             snapshot_download(
                 repo_id=repo_id,
-                allow_patterns=["*.py", "*.json", "*.txt", "model.safetensors", "tokenizer*"],
+                revision=VELA3_PINNED_REVISION,
+                allow_patterns=[
+                    "*.py",
+                    "config.json",
+                    "model.safetensors",
+                    "tokenizer.json",
+                    "tokenizer_config.json",
+                    "special_tokens_map.json",
+                ],
+                max_workers=2,
             )
         )
 
@@ -197,7 +210,6 @@ class VelaSystemOneRouter:
             enc_code = enc_file.read_text(encoding="utf-8")
             modified = False
 
-            # Defensively restore native float32 master weights if ever modified
             custom_dtype_str = "dtype=(torch.bfloat16 if (torch.cuda.is_available() and torch.cuda.is_bf16_supported()) else torch.float16)"
             if custom_dtype_str in enc_code:
                 enc_code = enc_code.replace(custom_dtype_str, "dtype=torch.float32")
@@ -207,7 +219,6 @@ class VelaSystemOneRouter:
                 enc_code = enc_code.replace(".last_hidden_state.float()", ".last_hidden_state")
                 modified = True
 
-            # Configure hardware-adaptive BF16/FP16 autocast
             if "_dtype = torch.bfloat16" not in enc_code:
                 raw_lines = enc_code.splitlines()
                 clean_lines = []

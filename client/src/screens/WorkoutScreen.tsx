@@ -1,3 +1,4 @@
+// client/src/screens/WorkoutScreen.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
@@ -7,6 +8,7 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -15,6 +17,37 @@ import { StorageService, ActiveSessionState } from '../storage/storageService';
 import { Colors } from '../theme/colors';
 import ExerciseLoggerCard from '../components/workout/ExerciseLoggerCard';
 import ExercisePickerModal from '../components/common/ExercisePickerModal';
+
+function confirmAction(
+  title: string,
+  message: string,
+  confirmLabel: string,
+  onConfirm: () => void,
+  destructive = false,
+) {
+  if (Platform.OS === 'web') {
+    if (window.confirm(`${title}\n\n${message}`)) {
+      onConfirm();
+    }
+    return;
+  }
+  Alert.alert(title, message, [
+    { text: 'Cancel', style: 'cancel' },
+    {
+      text: confirmLabel,
+      style: destructive ? 'destructive' : 'default',
+      onPress: onConfirm,
+    },
+  ]);
+}
+
+function showNotice(title: string, message: string) {
+  if (Platform.OS === 'web') {
+    window.alert(`${title}\n\n${message}`);
+    return;
+  }
+  Alert.alert(title, message);
+}
 
 export default function WorkoutScreen() {
   const [session, setSession] = useState<ActiveSessionState | null>(null);
@@ -30,7 +63,7 @@ export default function WorkoutScreen() {
           setElapsedSeconds(Math.floor((Date.now() - active.startTime) / 1000));
         }
       });
-    }, [])
+    }, []),
   );
 
   useEffect(() => {
@@ -56,7 +89,7 @@ export default function WorkoutScreen() {
     exIdx: number,
     setIdx: number,
     field: 'weight_kg' | 'actual_reps' | 'completed',
-    value: any
+    value: any,
   ) => {
     if (!session) return;
     const updatedExercises = [...session.exercises];
@@ -100,19 +133,18 @@ export default function WorkoutScreen() {
 
   const handleRemoveExercise = async (exIdx: number) => {
     if (!session) return;
-    Alert.alert('Remove Exercise', 'Are you sure you want to remove this exercise from your workout?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Remove',
-        style: 'destructive',
-        onPress: async () => {
-          const updatedExercises = session.exercises.filter((_, idx) => idx !== exIdx);
-          const updatedSession = { ...session, exercises: updatedExercises };
-          setSession(updatedSession);
-          await StorageService.saveActiveSession(updatedSession);
-        },
+    confirmAction(
+      'Remove Exercise',
+      'Are you sure you want to remove this exercise from your workout?',
+      'Remove',
+      async () => {
+        const updatedExercises = session.exercises.filter((_, idx) => idx !== exIdx);
+        const updatedSession = { ...session, exercises: updatedExercises };
+        setSession(updatedSession);
+        await StorageService.saveActiveSession(updatedSession);
       },
-    ]);
+      true,
+    );
   };
 
   const handlePickExercise = async (exercise: Exercise) => {
@@ -136,23 +168,6 @@ export default function WorkoutScreen() {
     await StorageService.saveActiveSession(updatedSession);
   };
 
-  const handleFinishWorkout = () => {
-    if (!session) return;
-    const hasCompletedSets = session.exercises.some((ex) => ex.sets.some((s) => s.completed));
-    if (!hasCompletedSets) {
-      Alert.alert(
-        'Finish Workout?',
-        'You have not marked any sets as completed. Do you still want to log this workout?',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Log Anyway', onPress: () => commitWorkout() },
-        ]
-      );
-      return;
-    }
-    commitWorkout();
-  };
-
   const commitWorkout = async () => {
     if (!session) return;
     const durationMinutes = Math.max(1, Math.round(elapsedSeconds / 60));
@@ -167,21 +182,37 @@ export default function WorkoutScreen() {
     };
     await StorageService.logCompletedWorkout(historyEntry);
     setSession(null);
-    Alert.alert('Workout Logged!', `Great job! Recorded a ${durationMinutes} min session.`);
+    showNotice('Workout Logged!', `Great job! Recorded a ${durationMinutes} min session.`);
+  };
+
+  const handleFinishWorkout = () => {
+    if (!session) return;
+    const hasCompletedSets = session.exercises.some((ex) => ex.sets.some((s) => s.completed));
+    if (!hasCompletedSets) {
+      confirmAction(
+        'Finish Workout?',
+        'You have not marked any sets as completed. Do you still want to log this workout?',
+        'Log Anyway',
+        () => {
+          void commitWorkout();
+        },
+      );
+      return;
+    }
+    void commitWorkout();
   };
 
   const handleDiscardWorkout = () => {
-    Alert.alert('Discard Workout?', 'Are you sure you want to discard this session? All logged sets will be lost.', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Discard',
-        style: 'destructive',
-        onPress: async () => {
-          await StorageService.saveActiveSession(null);
-          setSession(null);
-        },
+    confirmAction(
+      'Discard Workout?',
+      'Are you sure you want to discard this session? All logged sets will be lost.',
+      'Discard',
+      async () => {
+        await StorageService.saveActiveSession(null);
+        setSession(null);
       },
-    ]);
+      true,
+    );
   };
 
   const handleStartQuickWorkout = async () => {
@@ -227,13 +258,18 @@ export default function WorkoutScreen() {
           <Text style={styles.emptySubtitle}>
             Launch a saved routine or start an empty training session.
           </Text>
-          <TouchableOpacity style={styles.actionBtnPrimary} onPress={() => navigation.navigate('Routines')}>
+          <TouchableOpacity
+            style={styles.actionBtnPrimary}
+            onPress={() => navigation.navigate('Routines')}
+          >
             <Ionicons name="clipboard-outline" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
             <Text style={styles.actionBtnText}>Browse Routines</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionBtnSecondary} onPress={handleStartQuickWorkout}>
             <Ionicons name="flash-outline" size={18} color={Colors.textPrimary} style={{ marginRight: 6 }} />
-            <Text style={[styles.actionBtnText, { color: Colors.textPrimary }]}>Start Quick Session</Text>
+            <Text style={[styles.actionBtnText, { color: Colors.textPrimary }]}>
+              Start Quick Session
+            </Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>

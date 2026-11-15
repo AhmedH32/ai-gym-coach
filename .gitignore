@@ -4,6 +4,7 @@ client/dist/
 client/build/
 client/.env
 client/.env.local
+.vercel
 *.apk
 
 # Python / Backend

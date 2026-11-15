@@ -8,8 +8,8 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "eslint . --ext .ts,.tsx",
-    "typecheck": "tsc --noEmit"
+    "build:web": "expo export --platform web && node -e \"const fs=require('fs'),p=require('path');const s='dist/assets/node_modules',d='dist/assets/vendor';if(fs.existsSync(s))fs.renameSync(s,d);const jsDir='dist/_expo/static/js/web';for(const f of fs.readdirSync(jsDir)){if(f.endsWith('.js')){const fp=p.join(jsDir,f);fs.writeFileSync(fp,fs.readFileSync(fp,'utf8').replaceAll('/assets/node_modules/','/assets/vendor/'));}}\"",
+    "deploy:web": "npm run build:web && npx vercel deploy dist --prod"
   },
   "dependencies": {
     "@expo/metro-runtime": "~3.2.3",

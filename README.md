@@ -1,244 +1,236 @@
-# AI Gym Coach — Biomechanical RAG & Strength-and-Conditioning Inference Engine
+# AI Gym Coach (v2.5) — Compound AI Biomechanical RAG & High-Throughput GPU Serving Engine
 
-[![Platform](https://img.shields.io/badge/Platform-Android%20%7C%20Expo%20SDK%2051-blue.svg)](https://expo.dev/)
-[![LLM Serving](https://img.shields.io/badge/Serving-vLLM%200.5%2B%20%7C%20BitsAndBytes%204--bit-purple.svg)](https://github.com/vllm-project/vllm)
-[![Base Model](https://img.shields.io/badge/Base%20LLM-Qwen2.5--7B--Instruct-red.svg)](https://huggingface.co/Qwen/Qwen2.5-7B-Instruct)
-[![LoRA Weights](https://img.shields.io/badge/Hugging%20Face-LoRA%20Adapter%20(Rank%2032)-orange.svg?logo=huggingface)](https://huggingface.co/ahmedhassanM/qwen2.5-7b-gym-coach-lora)
-[![Embeddings](https://img.shields.io/badge/Embeddings-BAAI%2Fbge--base--en--v1.5-green.svg)](https://huggingface.co/BAAI/bge-base-en-v1.5)
-[![Presentation](https://img.shields.io/badge/Slides-System%20Design%20Deck%20(PDF)-red.svg?logo=adobeacrobatreader&logoColor=white)](docs/AI_Gym_Coach_Presentation.pdf)
-[![Reproducible Notebook](https://img.shields.io/badge/Serving-Kaggle%20GPU%20Notebook-blue.svg?logo=kaggle)](notebooks/serve_backend.ipynb)
+[![Live Web Demo](https://img.shields.io/badge/Live_Web_App-Vercel_(Zero--Install_Demo)-000000?logo=vercel&logoColor=white)](https://ai-gym-coach.vercel.app)
+[![Live API Gateway](https://img.shields.io/badge/Modal_Serverless_API-Swagger_UI_(/docs)-00D26A?logo=fastapi&logoColor=white)](https://ahmed-h-moustafa2003--ai-gym-coach-v2-gymcoachservice-api.us-east.modal.run/docs)
+[![LLM Engine](https://img.shields.io/badge/vLLM_v0.22+-AWQ_Marlin_%7C_FlashAttention--2-7B3FE4)](https://github.com/vllm-project/vllm)
+[![System-1 Router](https://img.shields.io/badge/System--1_Router-Vela--3_Fast_(380M_BF16)-FF6B00)](https://huggingface.co/vllm-sr/vela3-fast)
+[![Hybrid RAG](https://img.shields.io/badge/Clinical_RAG-BGE_Bi--Encoder_%2B_Cross--Encoder-009688)](https://huggingface.co/BAAI/bge-reranker-base)
+[![Containerization](https://img.shields.io/badge/Docker_Compose-8GB_Local_%7C_24GB%2B_Cloud-2496ED?logo=docker&logoColor=white)](docker-compose.yml)
+[![CI/CD Gate](https://img.shields.io/badge/GitHub_Actions-4--Gate_Hardware_SLO_Pipeline-2088FF?logo=githubactions&logoColor=white)](.github/workflows/main_cd.yml)
+[![v1 LoRA Artifact](https://img.shields.io/badge/Hugging_Face-v1_QLoRA_Adapter_(r%3D32)-FFD21E?logo=huggingface&logoColor=black)](https://huggingface.co/ahmedhassanM/qwen2.5-7b-gym-coach-lora)
 [![License](https://img.shields.io/badge/License-MIT-lightgrey.svg)](LICENSE)
 
-An end-to-end, clinical-grade strength and conditioning coaching system combining a fine-tuned Large Language Model (`Qwen2.5-7B-Instruct` + LoRA) with an isolated Musculoskeletal Vector Store (BGE-Base + ChromaDB), an in-memory 876-movement inverted index, and an offline-first React Native execution client.
+An end-to-end, clinical-grade strength and conditioning **Compound AI System** combining a **380M-parameter System-1 Decision Encoder (`Vela-3`)**, a **Two-Stage Hybrid Clinical RAG Engine (`BGE-base` + `BGE-reranker` + `ChromaDB`)**, a **4-bit `AWQ-Marlin` LLM Synthesizer (`Qwen2.5-7B-Instruct-AWQ`)**, an **876-movement in-memory mechanical catalog**, and a **cross-platform React Native (Android & Web) client**.
 
-Built to eliminate generative hallucinations and biomechanically unsafe volume prescription in automated fitness software, the platform executes a **2-Stage Deterministic Directed Acyclic Graph (DAG)**. It isolates intent triage from exercise generation, enforces a calibrated safety circuit breaker ($\tau \le 0.38$) on pathological queries, caches periodization theory via RadixAttention prefix caching, and cross-verifies routines against an indexed catalog and dynamic client asset map.
+Engineered to eliminate generative hallucinations, acute medical triage failures, and multi-user GPU out-of-memory (OOM) crashes, **v2.5** consolidates a 4-model neural pipeline (`~7.97B` total parameters) onto a single serverless GPU (`NVIDIA L4 / A10G / L40S`) using stage-decoupled `asyncio` admission semaphores, 3-tier Radix prefix caching, and automated hardware SLO gating—cutting end-to-end `p50` latency by **`23.5× – 34.0×` (`105.4s` $\rightarrow$ `3.10s–4.49s`)** and boosting cluster burst throughput to **`3,902.5 tok/s` (`100%` pass rate across 16 concurrent users)**.
 
 ---
 
-## 2-Stage Deterministic DAG Architecture
+## Live Interactive Endpoints & Instant Verification
 
-The engine decouples classification and tool invocation from full program synthesis to guarantee safety precedence and eliminate multi-hop tool hallucination.
+* **🌐 Live Interactive Web Application (Vercel):** [**`https://ai-gym-coach.vercel.app`**](https://ai-gym-coach.vercel.app) *(Automatically triggers speculative GPU pre-warming on page load).*
+* **⚡ Interactive OpenAPI / Swagger Playground (`/docs`):** [**`https://ahmed-h-moustafa2003--ai-gym-coach-v2-gymcoachservice-api.us-east.modal.run/docs`**](https://ahmed-h-moustafa2003--ai-gym-coach-v2-gymcoachservice-api.us-east.modal.run/docs)
+* **🩺 Live GPU Hardware & VRAM Health Probe (`GET /health`):** [**`https://ahmed-h-moustafa2003--ai-gym-coach-v2-gymcoachservice-api.us-east.modal.run/health`**](https://ahmed-h-moustafa2003--ai-gym-coach-v2-gymcoachservice-api.us-east.modal.run/health)
+* **📱 Standalone Android Release APK:** Available under [**GitHub Releases**](https://github.com/AhmedH32/ai-gym-coach/releases)
 
-```text
-                                 [ Athlete Query Input ]
-                                            │
-                                            ▼
-                    ┌───────────────────────────────────────────────┐
-                    │      Pass 1: Intent Triage Router (vLLM)       │
-                    │         Qwen 2.5 7B LoRA Adapter (r=32)       │
-                    │   + Deterministic Safety Precedence Override  │
-                    └───────────────────────┬───────────────────────┘
-                                            │
-         ┌──────────────────────────────────┼──────────────────────────────────┐
-         │                                  │                                  │
-         ▼ [Pain Indicators / Red Flags]    ▼ [Pain-Free Movement / Gear]      ▼ [Fatigue / Form / Theory]
-  ┌──────────────┐                   ┌──────────────┐                   ┌──────────────┐
-  │   CLASS A    │                   │   CLASS C    │                   │ CLASS B / D  │
-  │ Medical Tool │                   │ Catalog Tool │                   │Direct Coaching│
-  └──────┬───────┘                   └──────┬───────┘                   └──────┬───────┘
-         │                                  │                                  │
-         ▼                                  ▼                                  │
-  ┌─────────────────────────────┐    ┌─────────────────────────────┐           │
-  │    ChromaDB Vector Store    │    │  In-Memory Inverted Index   │           │
-  │   BAAI/bge-base-en-v1.5     │    │   876 Canonical Movements   │           │
-  │  40 Musculoskeletal Cards   │    │ Negative Mechanical Filters │           │
-  │  Safety Reject: τ <= 0.38   │    │  (e.g., deep_flexion excl.) │           │
-  └──────────────┬──────────────┘    └──────────────┬──────────────┘           │
-                 │                                  │                          │
-                 └─────────────────┬────────────────┘                          │
-                                   │ Context Injection                         │
-                                   ▼                                           │
-                    ┌───────────────────────────────────────────────┐          │
-                    │       Pass 2: Grounded Clinical Synthesis      │          │
-                    │          Base Qwen 2.5 7B-Instruct            │          │
-                    │  Grounding: Radix-Cached Periodization Theory │          │
-                    │          + Retrieved Clinical Protocol        │          │
-                    └───────────────────────┬───────────────────────┘          │
-                                            │                                  │
-                                            ▼                                  │
-                    ┌───────────────────────────────────────────────┐          │
-                    │  Delimiter Parsing & Referential Integrity    │          │
-                    │  - In-Catalog Items: verified against 876 IDs │          │
-                    │  - Clinical Rehab: demoted to custom items    │          │
-                    │    (existsInCatalog: false, catalogId: null)  │          │
-                    └───────────────────────┬───────────────────────┘          │
-                                            │                                  │
-                                            ▼                                  ▼
-                    ┌──────────────────────────────────────────────────────────────────┐
-                    │                 Final Orchestrator Response Contract             │
-                    │          Markdown Clinical Rationale + Structured Pydantic JSON   │
-                    └───────────────────────────────┬──────────────────────────────────┘
-                                                    │ HTTPS / Secure ngrok Tunnel
-                                                    ▼
-                                          [ Client Mobile App ]
+### 1-Line Terminal Smoke Test (`curl`)
+```bash
+curl -X POST "[https://ahmed-h-moustafa2003--ai-gym-coach-v2-gymcoachservice-api.us-east.modal.run/chat](https://ahmed-h-moustafa2003--ai-gym-coach-v2-gymcoachservice-api.us-east.modal.run/chat)" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "Tendon below my kneecap is barking on deep squats, but I have dumbbells. Can I get a leg workout in today?"}'
 ```
 
-### Execution Lifecycle
-1. **Pass 1 (Intent Triage Router):** The query is evaluated by the fine-tuned LoRA router (`r=32`) under a strict 4-class routing contract. A **Deterministic Safety Precedence Interceptor** monitors input tokens: if acute musculoskeletal markers appear (`"pain"`, `"sharp"`, `"tendon"`, `"barking"`, `"tweak"`), the query is forced to `CLASS_A` (`search_medical_db`), preventing equipment keywords from overriding injury triage.
-2. **Direct Coaching Bypass:** If classified as `CLASS_B` (fatigue/DOMS/deloads) or `CLASS_D` (technique/warm-up theory), the engine evaluates fatigue markers via `backend/analytics_engine/recovery.py`, returns pure coaching Markdown, enforces `has_workout: false` to suppress empty client UI cards, and completely bypasses Pass 2 synthesis.
-3. **Tool Execution & Retrieval:**
-   * **Class A:** Queries the isolated ChromaDB vector store. If the nearest-neighbor cosine distance exceeds $\tau = 0.38$, retrieval aborts and triggers an automated out-of-scope medical referral.
-   * **Class C:** Queries the in-memory inverted catalog index (876 movements) applying target muscle requirements and negative mechanical exclusion filters (e.g., excluding shear loads or deep knee flexion).
-4. **Pass 2 (Grounded Clinical Synthesis):** The **Base `Qwen2.5-7B-Instruct`** model receives the athlete context, retrieved clinical protocols or candidate movements, and the static periodization prompt (reused across requests via RadixAttention prefix caching).
-5. **Referential Integrity & Sanitization:** Output tokens are parsed across custom delimiters. Prescribed catalog IDs are verified against the 876 indexed entries. Pathological rehab exercises (e.g., Spanish squats, isometrics) are automatically demoted to `existsInCatalog: false` with `catalogId: null`, protecting the client UI from broken foreign-key lookups.
-
 ---
 
-## Executive Demo & Core Artifacts
+## v2.5 Compound AI Architecture (System-1 / System-2 DAG)
 
-<p align="center">
-  <video src="https://github.com/user-attachments/assets/f7c98283-30f6-496d-8b8c-c7671a494045" width="100%" controls></video>
-</p>
+Rather than forcing a 7B generative LLM to act as both classifier and generator, `v2.5` decouples **System-1 deterministic routing & hybrid retrieval** from **System-2 prefix-cached synthesis**:
 
-* **System Design Presentation:** Engineering defense slide deck detailing architectural trade-offs, clinical safety layers, and serving benchmarks [available here (PDF)](docs/AI_Gym_Coach_Presentation.pdf).
-* **Fine-Tuned Adapter Weights:** Public weights and tokenizer artifacts hosted on [Hugging Face Hub (`ahmedhassanM/qwen2.5-7b-gym-coach-lora`)](https://huggingface.co/ahmedhassanM/qwen2.5-7b-gym-coach-lora).
-* **Cloud Serving Pipeline:** Self-contained, automated 5-cell serving notebook for Kaggle/Colab T4 runtimes located in [`notebooks/serve_backend.ipynb`](notebooks/serve_backend.ipynb).
-* **Local Workstation Serving:** Production CLI inference orchestrator with VRAM autoscaling and dual-mode networking located in [`scripts/serve_local.py`](scripts/serve_local.py).
-* **Android Release Binary:** Pre-compiled, standalone release binary available under [GitHub Releases](https://github.com/AhmedH32/ai-gym-coach/releases).
+```text
+                        [ Athlete Mobile / Web Client ]
+                       (Two-Edge Speculative Pre-Warming)
+                                       │
+                                       ▼  HTTPS POST /chat
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                 FASTAPI ASYNC ORCHESTRATOR (`orchestrator.py`)               │
+│                                                                              │
+│  ┌────────────────────────────────────────────────────────────────────────┐  │
+│  │ Stage 1: System-1 Decision Encoder (`vllm-sr/vela3-fast`, 380M BERT)   │  │
+│  │  • Bounded Admission: `asyncio.Semaphore(3)` on `cuda:0` (`bfloat16`)  │  │
+│  │  • Single-Pass 7-Head Extraction (`42–56 ms` p50):                     │  │
+│  │    1. Primary Intent (4-Way)        5. Available Equipment (Multi)     │  │
+│  │    2. Workout Program Gate (Bool)   6. Explicit Exclusion Gate (Bool)  │  │
+│  │    3. Target Muscles (Multi-Label)  7. Excluded Mechanics / Gear       │  │
+│  │    4. Equipment Constraint Gate                                        │  │
+│  └─────┬──────────────────────┬───────────────────────┬───────────────────┘  │
+│        │                      │                       │                      │
+│        ▼ [CLASS_0_RED_FLAG]   ▼ [CLASS_1_CLINICAL]    ▼ [CLASS_2_CATALOG]    │
+│  ┌───────────┐        ┌───────────────┐       ┌──────────────────────┐       │
+│  │ Hard-Stop │        │ 2-Stage RAG   │       │ In-Memory Catalog    │       │
+│  │ Triage    │        │ Semaphore(2)  │       │ Inverted Index (876) │       │
+│  │ Circuit   │        │ 1. BGE-Base   │       │ • Target Muscle Hit  │       │
+│  │ Breaker   │        │   (K=10,τ=.58)│       │ • Equipment Filter   │       │
+│  │ (0 LLM    │        │ 2. Reranker   │       │ • Negative Mechanics │       │
+│  │  Tokens,  │        │   (T=2.5,     │       │   Exclusion Pruning  │       │
+│  │ ~108ms)   │        │    p >= 0.12) │       │   (`~1.0 ms`)        │       │
+│  └─────┬─────┘        └───────┬───────┘       └──────────┬───────────┘       │
+│        │                      │                          │                   │
+│        │                      └────────────┬─────────────┘                   │
+│        │                                   ▼ Context + Execution Directive   │
+│        │              ┌─────────────────────────────────────────┐            │
+│        │              │ Stage 2: System-2 LLM Synthesis (`vLLM`)│            │
+│        │              │  • Model: `Qwen2.5-7B-Instruct-AWQ`     │            │
+│        │              │  • Kernel: `awq_marlin` + `FlashAttn-2` │            │
+│        │              │  • 3-Tier Radix Prefix Cache (`~50ms`   │            │
+│        │              │    TTFT; `89.7–130.5 tok/s` decode)     │            │
+│        │              └────────────────────┬────────────────────┘            │
+│        │                                   ▼                                 │
+│        │              ┌─────────────────────────────────────────┐            │
+│        │              │ Stage 3: Referential Integrity Barrier  │            │
+│        │              │  • Delimiter Split & Pydantic Coercion  │            │
+│        │              │  • 876 Catalog Foreign-Key Verification │            │
+│        │              │  • Custom Rehab Demotion (`null` ID)    │            │
+│        │              └────────────────────┬────────────────────┘            │
+└────────┼───────────────────────────────────┼─────────────────────────────────┘
+         └───────────────────────────────────┴─────────────────► JSON Response
+```
 
----
-
-## Core Machine Learning & Alignment Overhaul
-
-### 1. The 4-Class Multi-Intent Taxonomy
-To eliminate tool-calling compulsion on standard fatigue and soreness, training data was aligned to a 4-class mutually exclusive contract:
-
-| Routing Class | Target Action | Output Schema | Clinical / Coaching Trigger |
+### The 4-Class Mutually Exclusive Routing Taxonomy
+| Route Class | Target Execution Path | Output Contract | Clinical / Coaching Trigger |
 |---|---|---|---|
-| **Class A** | `search_medical_db` | Strict Tool Call JSON | Musculoskeletal pathology, acute/chronic pain, joint irritation, sharp mechanical tweaks. |
-| **Class B** | Direct Coaching | Pure Markdown | Periodization, fatigue management, 5x5 plateaus, programmed deloads, systemic DOMS. |
-| **Class C** | `search_exercise_catalog` | Strict Tool Call JSON | Pain-free equipment substitutions, exercise mechanical queries. |
-| **Class D** | Direct Coaching | Pure Markdown | General lifting technique, warm-up theory, general strength coaching. |
-
-### 2. Data-Centric Synthetic Engineering & Iterative Hardening
-Rather than scraping unstructured web forums—which are rife with biomechanically unsound advice and bro-science—the training distribution was synthetically generated and grounded strictly in sports science literature (Renaissance Periodization volume landmarks: MEV, MAV, MRV, and tempo conventions).
-
-The dataset underwent a three-stage audit and curation pipeline (`ml_pipeline/synthetic_data/`):
-* **v1 Initial Draft (`train_data.jsonl` — 907 pairs):** Baseline instruction-tuning split across program generation, recovery, and pain queries. Automated evaluation revealed severe tool-calling compulsion where standard DOMS/fatigue falsely invoked medical tools.
-* **v2 Schema Realignment & LLM Judge (`train_data_transformed.jsonl` — 927 pairs):** Audited 663 legacy samples with an automated LLM judge (`ml_pipeline/verify_dataset.py`); 244 queries detailing lifting fatigue and training stalls were stripped of tool calls and transformed into Class B direct-coaching responses.
-* **v3 Hardened Production Split (`train_data_final.jsonl` — 967 pairs):** Integrated **40 targeted out-of-domain (OOD) negative anchor examples** (non-orthopedic emergencies like appendicitis/cardiac events, PED inquiries, crash diets, and diagnostic imaging scans) establishing a ~6.4% negative anchor ratio to suppress tool hallucination on unsupported queries.
-
-### 3. Parameter-Efficient Fine-Tuning (PEFT / LoRA)
-* **Base Architecture:** `Qwen/Qwen2.5-7B-Instruct` fine-tuned via Unsloth in 4-bit BitsAndBytes quantization on an Nvidia Tesla T4 GPU (16 GB VRAM).
-* **Target Modules:** All linear projections across both attention and feed-forward networks (`q_proj`, `k_proj`, `v_proj`, `o_proj`, `gate_proj`, `up_proj`, `down_proj`).
-* **Hyperparameters:** LoRA Rank $r=32$, scaling factor $\alpha=64$, Dropout $=0$, learning rate $2 \times 10^{-4}$ with linear warmup, per-device batch size 2 with 4 gradient accumulation steps (effective batch size = 8), sequence length capped at 2,048 tokens.
-* **Chat Template Alignment:** Standardized conversation tokenization against the native Qwen2.5 chat template to guarantee deterministic tool-call serialization and eliminate multi-turn role confusion.
-* **Artifact Registry:** Decoupled final adapter weights (162 MB) published to [Hugging Face Hub (`ahmedhassanM/qwen2.5-7b-gym-coach-lora`)](https://huggingface.co/ahmedhassanM/qwen2.5-7b-gym-coach-lora).
+| **`CLASS_0_RED_FLAG`** | Deterministic Circuit Breaker (`0` LLM tokens) | Urgent Triage Markdown (`has_workout: false`) | Acute medical/neurological trauma: radiating chest tightness, cauda equina (saddle numbness), audible tendon rupture with retraction. |
+| **`CLASS_1_CLINICAL_RAG`** | `search_medical_db` (2-Stage Hybrid RAG) | Clinical Rationale + Custom Rehab JSON (`wants_workout=True`) or Diagnostic Markdown (`False`) | Musculoskeletal joint/tendon pain, pinching, burning, or lift-provoked irritation (overrides equipment keywords). |
+| **`CLASS_2_CATALOG_WORKOUT`** | `search_exercise_catalog` (876 Inverted Index) | Biomechanical Rationale + Verified Catalog Workout JSON (`has_workout: true`) | Pain-free hypertrophy, strength, or equipment-constrained routine generation for healthy athletes. |
+| **`CLASS_3_DIRECT_COACHING`** | Direct Tier-1 Prefix-Cached Synthesis | Pure Periodization / Technique Markdown (`has_workout: false`) | Periodization theory (MEV/MAV/MRV), deload structure, rest intervals, plateau management, or lifting form cues. |
 
 ---
 
-## Clinical RAG Engine & Decoupled Periodization
+## Core Systems Engineering & First-Principles Architecture
 
-### 1. Vector Store Architecture & Calibrated Safety Threshold ($\tau = 0.38$)
-* **Dense Bi-Encoder:** `BAAI/bge-base-en-v1.5` (768-dimensional embeddings) running on CPU via SIMD AVX2 acceleration.
-* **Storage Engine:** ChromaDB persistent storage, strictly populated by the **40 canonical clinical injury cards** from `rag_corpus/injuries/`.
-* **Idempotent Synchronization (`scripts/ingest_canonical_chroma.py`):** Computes SHA-256 hashes of each card to ensure deterministic, zero-duplicate synchronization across environments.
-* **Calibrated Rejection Threshold:** Nearest-neighbor queries must satisfy $\text{Cosine Distance}(q, c) \le 0.38$.
+### 1. Replacing 7B QLoRA Routing with a 380M System-1 Decision Encoder (`278×` Speedup)
+* **The `v1` Baseline Bottleneck:** In `v1.0`, routing relied on a fine-tuned `Qwen2.5-7B-Instruct` Rank-32 QLoRA adapter ([`ahmedhassanM/qwen2.5-7b-gym-coach-lora`](https://huggingface.co/ahmedhassanM/qwen2.5-7b-gym-coach-lora)) trained via Unsloth on 967 LLM-judged synthetic examples. Generating routing JSON autoregressively required **`15,779.5 ms p50` (`31,360.2 ms p95`)** before retrieval could even begin.
+* **The `v2.5` System-1 Solution:** Replaced generative LLM routing with `vllm-sr/vela3-fast` (`380M` UltraBERT backbone, pinned to immutable commit `fa60e3aa`), which evaluates **7 parallel classification and multi-label slot heads in a single bidirectional forward pass** (`42.0 ms – 56.7 ms p50`).
+* **Hardware-Adaptive Mixed Precision:** Retains `float32` master weights for numerical stability while dynamically dispatching `torch.bfloat16` Tensor Core autocast on Ampere/Ada GPUs (`sm_86`/`sm_89`) and `torch.float16` on Turing (`sm_75`). Eliminating lexical overlap between `CLASS_1` and `CLASS_2` criteria achieved **`100.0%` (`16/16`) intent and workout-gate accuracy**.
+
+### 2. Resolving Vector Space Distribution Collapse & Two-Stage Cross-Encoder Calibration
+#### A. Decoupling Periodization Theory from ChromaDB
+Indexing broad periodization Markdown documents alongside specific musculoskeletal injury cards in `768`-dimensional `BAAI/bge-base-en-v1.5` space caused severe geometric distortion:
+$$\text{Distance}(\text{OOD: Sourdough Recipe}, \text{Periodization}) < \text{Distance}(\text{In-Domain: Biceps Overuse}, \text{Corpus}) \quad \text{[Distribution Collapse]}$$
+Purging the 5 periodization documents from ChromaDB and relocating them to `prompt_assets/periodization/` (where they are cached in GPU VRAM via `vLLM` RadixAttention) restored embedding homogeneity across the 40 canonical injury cards.
+
+#### B. Overcoming Vocabulary Mismatch with Two-Stage Hybrid RAG ($T = 2.5$)
+Even in a homogeneous injury store, single-stage bi-encoder cosine distance ($\tau \le 0.38$) suffered a **`33.33%` (`8/24`) false rejection rate** when athletes described clinical conditions using gym slang (*"tendon below kneecap is barking out of the hole"* vs. *"Patellar Tendinopathy"*).
+1. **Stage 1 (Colloquial-Enriched Bi-Encoder Recall):** Enriched all 40 clinical cards with colloquial symptom descriptors and relaxed `bge-base-en-v1.5` candidate retrieval to $K = 10$ at $\tau \le 0.58$.
+2. **Stage 2 (Cross-Encoder Reranking & Sigmoid Calibration):** `BAAI/bge-reranker-base` (`278M`) performs full cross-attention over all 10 `(query, protocol)` pairs and applies a temperature-scaled sigmoid gate ($P = \sigma(\text{logit} / T)$ with $T = 2.5$, cutoff $p \ge 0.12$):
 
 ```text
- 0.0                      0.24                0.38             0.53               0.68         1.0
-  ├─────────────────────────●───────────────────┰────────────────●──────────────────●───────────┤
-  │   IN-DOMAIN ZONE (Rehab Protocol)           ┃      OUT-OF-SCOPE REJECTION ZONE              │
-  │   Patellar Tendon (d = 0.24)                ┃      Appendicitis (d = 0.53)   Recipe (d=0.68)│
-  │                                             ┃                                               │
-  └─────────────────────────────────────────────┸───────────────────────────────────────────────┘
-                                                ▲
-                                                Rejection Threshold τ = 0.38
-                                                Emergency Safety Margin Δ ≈ 0.15
-                                                General OOD Margin Δ ≈ 0.30
+ 0.00   0.002 (Cardiac/OOD)     0.12 (Cutoff)                          0.964 (Patellar Hit)  1.00
+  ├───────●──────────────────────┰──────────────────────────────────────●──────────────────────┤
+  │  OUT-OF-DOMAIN REJECTION     ┃            VERIFIED MUSCULOSKELETAL REHAB ZONE              │
+  │  (Emergency Triage Refusal)  ┃     Recall@1: 91.67% | Recall@3: 100.0% | MRR: 0.9583       │
+  └──────────────────────────────┸─────────────────────────────────────────────────────────────┘
 ```
 
-Any query yielding a nearest-neighbor distance $> 0.38$ triggers an automated clinical refusal (*"Your query falls outside our verified musculoskeletal database... consult a physician."*), preventing medical misinformation.
+### 3. Single-GPU Co-Location via Stage-Decoupled Admission Semaphores
+In `v2.0`, running `vLLM` alongside the 3 co-processor models (`Vela-3` + `BGE-base` + `BGE-reranker`) required **two separate physical GPUs (`cuda:0` + `cuda:1`)** because co-locating them on one GPU under unbounded `asyncio` concurrency caused dynamic encoder activation graphs to spike to **`5,918 MB` (`5.78 GiB`)**, colliding with `vLLM` and crashing 37.5% of requests (`6/16`) with `CUDA out of memory`.
+* **Triton `instance_group` Bulkhead Pattern:** `GymCoachOrchestrator` wraps GPU co-processor execution in stage-decoupled semaphores (`_router_sem = asyncio.Semaphore(3)`, `_rag_sem = asyncio.Semaphore(2)`).
+* **Result:** Caps peak co-processor reserved VRAM at **`2,496 MB` (`2.44 GiB`, `-57.8%`)**, allowing the entire 4-model stack to run on **1 GPU** while feeding `vLLM` continuous batching (`16/16` pass rate, **`3,902.5 tok/s`** aggregate throughput).
 
-### 2. Decoupling Periodization Theory: Resolving Threshold Collapse
-During early development, indexing the 5 periodization theory documents directly in ChromaDB alongside the 40 clinical cards caused severe geometric distortion across the 768-dimensional embedding space:
-* **High Intra-Cluster Distance for Real Queries:** Broad markdown theory files produced weak semantic matches for specific athletic inquiries (e.g., *"biceps tendon overworking on pull days"* yielded large distances $d > 0.45 - 0.52$).
-* **False Proximity for Out-of-Domain Noise:** Unrelated queries containing procedural tokens (e.g., a sourdough bread recipe with *"rest intervals"*, *"cycles"*, *"volume"*) produced artificially low distances ($d \approx 0.48 - 0.52$) against high-level periodization text.
+### 4. First-Principles GQA KV-Cache Math & Multi-Profile Hardware Scaling
+`Qwen2.5-7B-Instruct-AWQ` uses **Grouped Query Attention (GQA)** with $L = 28$ layers, $H_{kv} = 4$ Key-Value heads, and head dimension $D = 128$ in `FP16` (`2 bytes`):
+$$\text{KV Cache per Token} = 2 \times 28 \text{ layers} \times 4 \text{ KV heads} \times 128 \text{ dim} \times 2 \text{ bytes} = 57,344 \text{ bytes} = \mathbf{56 \text{ KiB/token}}$$
 
-$$\text{Distance}(\text{OOD: Sourdough}, \text{Periodization}) < \text{Distance}(\text{In-Domain: Biceps Overuse}, \text{Corpus}) \quad \text{[Distribution Collapse]}$$
-
-**The Architectural Solution:** Periodization theory was completely purged from ChromaDB and relocated to 5 markdown documents in `prompt_assets/periodization/` (`exercise_ordering_rules.md`, `progression_and_overload_models.md`, `rep_ranges_and_stimulus.md`, `split_design_and_frequency.md`, `volume_landmarks_table.md`).
-1. **Restores Embedding Homogeneity:** ChromaDB indexes strictly musculoskeletal pathologies, creating a clean bimodal distribution that makes the single calibrated threshold ($\tau = 0.38$) mathematically sound.
-2. **RadixAttention Prefix Caching:** The 5 periodization assets are concatenated directly into the Pass 2 system prompt. Because these tokens remain static across sessions, vLLM retains the Key-Value (KV) cache in GPU memory, eliminating redundant prefill FLOPs and accelerating generation without consuming retrieval bandwidth.
-
----
-
-## In-Memory Exercise Catalog (876 Movements)
-
-The catalog (`backend/rag_engine/exercise_catalog.py`) loads 876 movements from `raw_data/exercises.json` into an in-memory inverted index:
-* **Multi-Key Inverted Index:** Maps target muscle groups, secondary stabilizers, and equipment availability.
-* **Negative Mechanical Filtering:** Dynamically strips contraindicated exercises (e.g., `exclude_mechanics="deep_flexion, plyometrics"`), pruning dangerous movements before candidate generation.
-* **Referential Integrity Barrier:** The orchestrator cross-checks generated exercise IDs against the 876 indexed entries. Any hallucinated ID is automatically demoted to a custom item (`existsInCatalog: false`, `catalogId: null`), preventing client-side image lookup crashes.
+This compact `56 KiB/token` footprint drives our **Single-Image, Multi-Profile Hardware Architecture**:
+* **8 GB Consumer GPU (`RTX 4060` — `local-8gb` Docker Profile):** Offloads the `767M` co-processor suite to System RAM (`COPROCESSOR_DEVICE=cpu`, `0 MB` VRAM) and runs `vLLM` in eager mode (`4,096` context = only **`224 MiB` KV cache** + `5.20 GiB` weights = **`~6.3 GiB` total VRAM**).
+* **24 GB Datacenter GPU (`L4` / `A10G` — `0.75` Pool):** Allocates `11.17 GiB` strictly to the KV block pool = **`204,336` tokens** (**`24.94×` concurrency** at full `8,192` context).
+* **48 GB Datacenter GPU (`L40S` — `0.75` Pool):** Allocates `27.65 GiB` to the KV block pool = **`517,808` tokens** (**`63.21×` concurrency** at full `8,192` context).
 
 ---
 
-## High-Throughput Serving & Hardware Profiling
+## Architectural & Telemetry Progression (`v1.0` $\rightarrow$ `v2.0` $\rightarrow$ `v2.5`)
 
-The inference backend is optimized to run on a single Nvidia Tesla T4 GPU (16 GB / 15.3 GiB addressable VRAM):
+### 1. Subsystem Evolution Matrix
 
-| Component | Footprint | Systems Architecture & Allocation Mechanics |
-|---|---|---|
-| **Base Model Weights** | ~5.5 GB | `Qwen/Qwen2.5-7B-Instruct` quantized to 4-bit BitsAndBytes (NF4). |
-| **LoRA Hot-Swap Adapter** | ~162 MB | Rank $r=32$ linear adapter modules loaded into vLLM runtime. |
-| **GQA KV Cache (32,768 Context)** | ~1.84 GB | Pre-allocated block pool for full 32k sequence length. |
-| **Execution Workspaces & Buffers**| ~6.1 GB | PyTorch/CUDA runtime, Triton kernels, activation headroom, and PagedAttention memory pool. |
-| **Total Peak Allocated VRAM** | **13.6 GiB / 15.3 GiB** | Fits within `--gpu-memory-utilization 0.90` operational budget. |
+| Subsystem | `v1.0` Legacy (`1× T4` + Pass-1 QLoRA) | `v2.0` Pre-Modal (Kaggle `2× T4` Disaggregated) | `v2.5` Production (Modal Serverless + Docker Compose) |
+|---|---|---|---|
+| **Compute Topology** | Ephemeral Kaggle Notebook (`T4 16GB`, `sm_75`) + manual `pyngrok` tunnel. | Disaggregated Dual-T4 (`vLLM` on `cuda:0`, Co-Processor on `cuda:1`). | **Unified Serverless GPU Pool (`L4` / `A10G` / `L40S`, 24–48GB)** + **2-Container Docker Compose** (`local-8gb` & `cloud-24gb`). |
+| **Intent & Slot Router** | `Qwen2.5-7B` Rank-32 QLoRA adapter (`15.78s p50` autoregressive JSON pass). | `Vela-3` (`380M`) on `cuda:1` (`127.3ms p50`, `83.3%–91.7%` gate accuracy). | **Hardware-Adaptive `Vela-3` (`380M`) on `cuda:0`** (`bfloat16`, **`42–56ms p50`**, **`100%` intent & workout-gate accuracy**). |
+| **LLM Quantization & Kernel** | `BitsAndBytes` 4-bit `NF4` (Eager mode, no CUDA graphs, no FlashAttention-2). | `vLLM` `auto_awq` (CUDA graphs enabled; `FA-2` unsupported on `sm_75` T4). | **`vLLM` `awq_marlin` + `FlashAttention-2`** (`sm_86`/`sm_89`), `9P` weight prefetch (`1.45s`), pre-compiled Triton sampler (`max_tokens=2, temp=0.1`). |
+| **Clinical RAG Engine** | 1-Stage CPU `bge-base` ($\tau \le 0.38$; `33.3%` false rejects; `100%` drop bug). | 2-Stage `bge-base` + `bge-reranker` on `cuda:1` ($T=2.5, p \ge 0.12$). | **Transactional Persistent ChromaDB** with SHA-256 delta sync (`Recall@3 = 100%`, `MRR = 0.9583`). |
+| **Multi-User Concurrency** | 1-user sequential blocking (`93.7%` VRAM saturation). | Required 2 physical GPUs; crashed on single GPU under 16-user burst (`5.78 GiB` spike). | **Single-GPU Co-Location via Bounded Semaphores (`3` Router / `2` RAG)**: `2.44 GiB` ceiling, **`16/16` (`100%`) burst pass**. |
+| **CI/CD & Quality Gates** | Manual notebook execution & local unit tests. | Embedded notebook benchmark script. | **4-Gate GitHub Actions Pipeline** (Corpus Contract $\rightarrow$ GPU ChromaDB Gate $\rightarrow$ Staging SSE `TTFT`/`ITL` & 8-User Burst $\rightarrow$ Deploy). |
 
-### Grouped Query Attention (GQA) Memory Calculation
-Qwen2.5-7B uses 28 transformer layers, 4 Key-Value heads, and a head dimension of 128. In FP16 precision (2 bytes per parameter):
+### 2. Empirical Hardware Benchmark & Roofline Matrix
 
-$$\text{KV Cache per Token} = 2 \times 28 \text{ layers} \times 4 \text{ heads} \times 128 \text{ dim} \times 2 \text{ bytes} = 57,344 \text{ bytes} \approx 56 \text{ KB}$$
-
-At the full 32,768-token context window:
-
-$$32,768 \times 56 \text{ KB} \approx 1.84 \text{ GB VRAM}$$
-
-### Why vLLM Allocates ~13.6 GiB on Startup
-When launching with `--gpu-memory-utilization 0.90`, vLLM immediately claims 90% of available GPU memory ($15.36 \text{ GiB} \times 0.90 \approx 13.8 \text{ GiB}$) during engine initialization. Beyond holding the 5.5 GB model weights and the 1.84 GB KV cache, the engine reserves the remaining ~6.2 GB as a static PagedAttention block pool and execution buffer. This design prevents dynamic memory allocation spikes and eliminates out-of-memory errors during multi-user inference.
-
----
-
-## Client Systems Engineering & Full-Stack Integration
-
-### 1. Static Asset Pre-Compiler (1,746 Frames, 0 Fallbacks)
-* **Hermes Engine Compatibility:** React Native's Hermes engine does not support dynamic runtime string evaluation inside `require()` calls. A build-step pre-compilation pipeline (`client/src/assets/exerciseImages.ts`) maps all **1,746 snake-cased `.webp` multi-angle frames** to static require references.
-* **100% Asset Resolution:** Achieves a verified **1,746/1,746 match rate** across the 876 catalog movements (2 demonstration frames per movement), eliminating image placeholder fallbacks.
-* **1.1s Dual-Frame Cadence Animation:** Exercise detail modals run an asynchronous flipbook loop cycling start and peak contraction states at a 1.1s cadence to convey lifting tempo visually.
-
-### 2. Mobile Architecture & Native Polish
-* **Expo SDK 51 & Hermes:** Upgraded the mobile runtime to SDK 51, establishing direct JavaScript Interface (JSI) compatibility and eliminating native C-extension dynamic linking issues.
-* **System Surface Palette:** Android window manager configured with `translucent={false}` to prevent system bar overlapping, unified with dark theme surfaces (`#0D1117`).
-* **Active Workout Session Engine:** Tracks active session duration, cumulative tonnage, set completion states, and contextual units (`reps` for dynamic resistance vs. `secs` for rehabilitation isometrics).
-
-### 3. Production CI/CD & Gateway Optimization
-* **EAS Cloud Packaging:** Streamlined mobile binary creation via EAS Build (`buildType: apk`) for sideloadable distribution.
-* **600%+ Upload Size Reduction:** Configured strict `.easignore` compiler filters to isolate source logic from build caches, cutting cloud upload sizes from 231 MB to lightweight source archives.
-* **Unbuffered Streaming Logs:** Implemented `PYTHONUNBUFFERED=1` and real-time stdout poll loops in the FastAPI gateway to eliminate 4KB output buffering delays, shortening cold-start verification by ~120 seconds.
+| Metric / Hardware Probe | `v1.0` Baseline (`T4` 16GB `sm_75`) | `v2.0` Dual-GPU (`2× T4` 16GB `sm_75`) | `v2.5` on `NVIDIA L4` (`24GB`, `300 GB/s`) | `v2.5` on `NVIDIA A10G` (`24GB`, `600 GB/s`) | `v2.5` on `NVIDIA L40S` (`48GB`, `864 GB/s`) | Net Gain (`v1.0` $\rightarrow$ `v2.5`) |
+|---|---|---|---|---|---|---|
+| **E2E Pipeline Latency (`p50`)** | `105.391 s` | `9.131 s` (`18.08s` Run 1) | `~6.80 s` | **`4.490 s`** | **`~3.10 s`** | **`23.5× – 34.0×` faster** |
+| **E2E Pipeline Latency (`p95`)** | `115.101 s` | `15.296 s` (`25.33s` Run 1) | `12.69 s` (8-user burst) | **`4.85 s`** (`8.95s` burst) | **`3.21 s`** (8-user burst) | **`35.8×` faster** |
+| **Red-Flag Triage E2E (`CLASS_0`)** | `> 100.0 s` | `175.0 ms` | `204.2 ms` (burst) | **`135.0 ms`** (`183ms` burst) | **`108.25 ms`** (burst) | **`> 900×` faster hard-stop** |
+| **Router Latency (`p50` / `p95`)** | `15,779.5 ms` / `31,360.2 ms` | `127.25 ms` / `133.54 ms` | `~68.0 ms` / `82.0 ms` | **`56.7 ms` / `73.7 ms`** | **`~42.0 ms` / `54.0 ms`** | **`278× – 375×` faster** |
+| **Router Intent / Gate Accuracy** | `~75.0%` | `91.67%` / `83.33%` | **`100.0%` / `100.0%`** | **`100.0%` / `100.0%`** | **`100.0%` / `100.0%`** | **`100%` deterministic** |
+| **Cold Prefix TTFT (`~3.8K` tok)** | `27,108.51 ms` | `8,040.76 ms` | `~520 ms` | **`~380 ms`** | **`~310 ms`** | **`71× – 87×` faster** |
+| **Warm Tier-1 Prefix TTFT** | `646.13 ms` | `62.51 ms – 207.18 ms` | `164.48 ms` | **`52.85 ms`** | **`48.52 ms`** | **`13.3×` faster (`559×` vs cold)** |
+| **Single-Stream Decode (`ITL` p50)** | `8.28 tok/s` (`124.75 ms`) | `35.83 tok/s` (`28.13 ms`) | `44.8 tok/s` (`22.34 ms`) | **`89.7 tok/s` (`11.15 ms`)** | **`130.5 tok/s` (`7.66 ms`)** | **`10.8× – 15.8×` higher tok/s** |
+| **Clinical RAG `Recall@1` / `@3`** | `54.17%` / `58.33%` | `87.5%–91.7%` / `100.0%` | **`91.67%` / `100.0%`** | **`91.67%` / `100.0%`** | **`91.67%` / `100.0%`** | **`+37.5%` R@1, `100%` R@3** |
+| **Clinical RAG `MRR` / Drop Rate** | `0.5625` / `100.0%` dropped | `0.9583` / `0.0%` | **`0.9583` / `0.0%`** | **`0.9583` / `0.0%`** | **`0.9583` / `0.0%`** | **`+70.4%` MRR, `0%` drops** |
+| **16-User Burst Throughput** | Failed (Sequential) | Crashed (`6/16` OOM on 1 GPU) | `100%` Pass (`~2,100 tok/s`) | **`16/16` Pass (`3,902.5 tok/s`)** | **`100%` Pass (`~5,600+ tok/s`)** | **`471×` cluster throughput** |
+| **Allocated KV Cache Pool (`0.75`)** | `~1.84 GB` (32K eager) | `81,648` tokens (`9.97×`) | `204,336` tokens (`24.94×`) | **`204,336` tokens (`24.94×`)** | **`517,808` tokens (`63.21×`)** | **`6.3×` larger KV capacity** |
 
 ---
 
-## Technical Stack Summary
+## Client Systems Engineering (React Native Mobile & Web)
 
-| Domain | Layer | Specification |
-|---|---|---|
-| **Machine Learning** | Base LLM | `Qwen/Qwen2.5-7B-Instruct` (Native 32k Context Window) |
-| | Fine-Tuning | PEFT / LoRA ($r=32$, $\alpha=64$, Unsloth) |
-| | Quantization | BitsAndBytes (4-bit NF4) |
-| | Inference Engine | vLLM 0.5+, CUDA 12.1+, Triton JIT |
-| | Weights Registry | [Hugging Face Hub (`ahmedhassanM/qwen2.5-7b-gym-coach-lora`)](https://huggingface.co/ahmedhassanM/qwen2.5-7b-gym-coach-lora) |
-| **Retrieval (RAG)** | Dense Embeddings | `BAAI/bge-base-en-v1.5` (768-dim, CPU AVX2 acceleration) |
-| | Vector Database | ChromaDB Persistent Store (Cosine Distance Space) |
-| | Safety Barrier | Calibrated $\tau = 0.38$ distance threshold |
-| | Clinical Corpus | 40 Canonical Musculoskeletal Injury Cards |
-| **Backend Gateway** | Framework | FastAPI, Uvicorn (Port 8000) |
-| | Routing DAG | 2-Stage Deterministic DAG Orchestrator |
-| | Contract Validation| Pydantic v2 Schema Enforcement |
-| | Catalog Index | In-memory inverted index (876 movements) with mechanical exclusion |
-| | Ingress Tunnel | pyngrok Static Anycast Edge Tunnel |
-| **Mobile Client** | Runtime | React Native (Expo SDK 51), TypeScript |
-| | Engine | Hermes Bytecode Engine |
-| | Movement Media | 1,746 pre-compiled `.webp` frames (876 exercises $\times$ 2 states) |
-| | Persistence | AsyncStorage |
+* **Two-Edge Speculative Container Pre-Warming (`client/src/api/coachApi.ts`):** Eliminates perceived serverless cold-start latency by firing a non-blocking, in-flight-deduplicated `GET /health` wakeup probe on `CoachScreen` mount and `TextInput` focus (`120s` cooldown guard matching Modal's container `scaledown_window`).
+* **4-Stage Progressive Coaching Status Indicator (`client/src/screens/CoachScreen.tsx`):** Transitions smoothly across 4 contextual analysis stages (`0s`, `4s`, `10s`, `18s`) if a request intersects a cold container boot.
+* **Hermes Static Asset Pre-Compiler (`1,746` WebP Frames, `0` Fallbacks):** React Native's Hermes bytecode engine forbids dynamic runtime strings inside `require()`. `client/src/assets/exerciseImages.ts` maps all **1,746 snake-cased `.webp` demonstration frames** (`876 exercises × 2 states`) to static asset references with a `1.1s` asynchronous flipbook cadence.
+* **Referential Integrity & Custom Rehab Demotion:** The backend orchestrator cross-verifies every generated `catalogId` against the 876 indexed movements. Non-catalog physical therapy drills (e.g., *Spanish Squats*) are automatically demoted to `existsInCatalog: false, catalogId: null`, preventing client image lookup crashes.
+
+---
+
+## Automated 4-Gate MLOps CI/CD Pipeline (`.github/workflows/main_cd.yml`)
+
+Every push to `main` touching backend, corpus, or infrastructure code must clear four sequential verification gates on an pinned `ubuntu-24.04` runner before production rollout:
+
+1. **Gate 1 — CPU Corpus & Catalog Contract Verification (`~1s`):** Verifies all 40 clinical injury Markdown cards are non-empty and validates the 876-exercise JSON catalog schema (`id`, `name`, `primaryMuscles`, `equipment`).
+2. **Gate 2 — Transactional GPU ChromaDB Reconciliation & OOD Regression Gate (`~8s`):** Computes SHA-256 content hashes to perform differential ChromaDB upserts on the persistent Modal Volume, verifies in-domain recall (`COND_PATELLAR_TENDINOPATHY`, $P = 0.964$), and enforces out-of-domain cardiac emergency rejection ($P = 0.002$).
+3. **Gate 3 — Isolated Staging Hardware SLO & Multi-User Burst Gate (`~45s`):** Boots an isolated staging GPU container, measures true SSE streaming `TTFT` ($< 250\text{ ms}$) and `p50 ITL` ($< 18\text{ ms}$ on `A10G`/`L40S`; $< 30\text{ ms}$ on `L4`), fires an **8-user concurrent burst** across all 4 routing classes (requiring `100%` route and workout-gate accuracy), and asserts post-burst co-processor VRAM remains below `3,200 MB`.
+4. **Gate 4 — Zero-Downtime Atomic Production Rollout (`modal deploy`):** Promotes the verified container image and persistent volume state to the live `us-east` ASGI gateway.
+
+---
+
+## Deployment & Reproduction Guide
+
+### Option 1: Serverless GPU Cloud Deployment (Modal)
+```bash
+pip install modal pydantic
+modal token new
+
+# Run the corpus verification gate, staging SLO gate, and production deployment
+modal run deploy_modal.py::ingest_and_verify_corpus
+modal run deploy_modal.py::verify_system_slos
+modal deploy deploy_modal.py
+```
+
+### Option 2: Self-Hosted Containerized Deployment (`Docker Compose`)
+A single immutable OCI image ([`Dockerfile`](Dockerfile), `pytorch:2.15.0-cuda13.2-cudnn9-runtime`) adapts across consumer and enterprise GPUs via three declarative hardware profiles in [`docker-compose.yml`](docker-compose.yml):
+
+```bash
+# Profile A: Fast Co-Processor & RAG Gateway Verification (~2.25 GB VRAM on 8GB RTX 4060)
+docker compose --profile gateway-only up --build
+
+# Profile B: Full 4-Model Stack on 8GB Consumer GPU (CPU Co-Processor + GPU Eager vLLM)
+docker compose --profile local-8gb up --build
+
+# Profile C: Production 24GB+ Datacenter GPU Stack (Full GPU Co-Location + AWQ-Marlin CUDAGraphs)
+docker compose --profile cloud-24gb up --build -d
+```
+
+### Option 3: Mobile (Android) & Web Client Execution
+```bash
+cd client
+npm install
+
+# Launch interactive Web App locally
+npx expo start --web
+
+# Export static production Web bundle & deploy to Vercel
+npx expo export --platform web
+npx vercel deploy dist --prod
+
+# Launch on physical Android device via USB Debugging / Expo Go (SDK 51)
+npx expo start --tunnel -c
+```
 
 ---
 
@@ -246,143 +238,41 @@ When launching with `--gpu-memory-utilization 0.90`, vLLM immediately claims 90%
 
 ```text
 ai-gym-coach/
+├── .github/workflows/
+│   └── main_cd.yml                 # 4-Gate MLOps CI/CD pipeline (Corpus -> RAG -> Staging SLOs -> Deploy)
 ├── backend/
 │   ├── agent_core/
-│   │   └── orchestrator.py         # 2-Stage Deterministic DAG Orchestrator
+│   │   ├── orchestrator.py         # Async DAG orchestrator, semaphore bulkheads & 3-tier prompt builder
+│   │   └── vela_router.py          # Vela-3 (380M) System-1 router with adaptive BF16/FP16 autocast
 │   ├── analytics_engine/
-│   │   └── recovery.py             # Volume landmarks & algorithmic recovery engine
+│   │   └── recovery.py             # Volume landmarks (MEV/MAV/MRV) & muscular recovery state engine
 │   ├── rag_engine/
-│   │   ├── chroma_db/              # Persistent canonical clinical vector store
-│   │   ├── exercise_catalog.py     # In-memory inverted index for 876 exercises
-│   │   ├── tools.py                # ClinicalRAGTools (Medical RAG & Catalog interface)
-│   │   └── vector_store.py         # RAGVectorStore (BGE bi-encoder AVX2 SIMD)
-│   └── server.py                   # FastAPI production gateway (/api/v1/chat)
-├── client/
-│   ├── src/
-│   │   ├── api/coachApi.ts         # HTTP client with ngrok header bypass
-│   │   ├── assets/
-│   │   │   ├── data/exercises.json # Canonical 876-movement dataset
-│   │   │   ├── exerciseImages.ts   # 1,746 static image require references
-│   │   │   └── exercises/          # Snake-cased demonstration frames (.webp)
-│   │   ├── components/             # Flipbook modals, set loggers, routine cards
-│   │   ├── screens/                # Coach, Routines, Catalog, and Active Workout
-│   │   └── utils/imageResolver.ts  # Zero-fallback asset resolver
-│   ├── app.json                    # Android manifest, status bar config, and theme
-│   └── eas.json                    # EAS Build configuration for standalone APK
-├── docs/
-│   └── AI_Gym_Coach_Presentation.pdf # Technical engineering defense deck
-├── ml_pipeline/
-│   ├── qwen2.5_gym_adapter/        # Exported LoRA adapter weights & metadata
-│   ├── synthetic_data/             # Curated 967-record dataset (train_data_final.jsonl)
-│   ├── training_scripts/           # Unsloth fine-tuning (train_unsloth.py)
-│   └── verify_dataset.py           # LLM-as-a-judge dataset curation pipeline
+│   │   ├── exercise_catalog.py     # In-memory inverted index (876 movements) & negative mechanical filters
+│   │   ├── tools.py                # 2-Stage Hybrid Clinical RAG (BGE Bi-Encoder + Cross-Encoder Reranker)
+│   │   └── vector_store.py         # Transactional ChromaDB store with SHA-256 delta reconciliation
+│   └── server.py                   # Standalone FastAPI ASGI gateway with lifespan warmup & CORS
+├── client/                         # Cross-platform React Native (Expo SDK 51) Mobile & Web application
+│   └── src/
+│       ├── api/coachApi.ts         # Modal gateway client with deduplicated speculative pre-warming
+│       ├── screens/                # CoachScreen (4-stage progressive status), WorkoutScreen, Routines
+│       └── assets/                 # 876 exercises JSON + 1,746 pre-compiled WebP demonstration frames
 ├── notebooks/
-│   └── serve_backend.ipynb         # Automated 5-cell Kaggle/Colab vLLM serving pipeline
-├── prompt_assets/periodization/    # 5 Markdown documents for Radix prefix caching
-├── rag_corpus/injuries/            # 40 canonical musculoskeletal injury cards
-├── raw_data/
-│   └── exercises.json              # Source movement catalog (876 exercises)
-├── scripts/
-│   ├── clean_exercises.py          # Data cleaning & taxonomy verification
-│   ├── compress_images.py          # Batch asset WebP compression
-│   ├── ingest_canonical_chroma.py  # SHA-256 idempotent ChromaDB ingestion
-│   └── serve_local.py              # CLI production inference orchestrator
-└── tests/                          # Automated verification test suite
-    ├── test_agent_orchestrator.py  # E2E DAG routing, Pass 1/2 contracts, referential integrity
-    ├── test_analytics.py           # Volume landmarks, recovery algorithms, fatigue scoring
-    ├── test_exercise_catalog.py    # Inverted index lookups, equipment & mechanical filters
-    ├── test_rag_retrieval.py       # Vector lookups, differential diagnosis, SHA-256 idempotency
-    └── test_rag_tools.py           # Tau=0.38 distance enforcement, emergency OOD rejection
+│   └── serve_backend.ipynb         # Historical v2.0 Dual-T4 disaggregation & ablation benchmark suite
+├── prompt_assets/periodization/    # 5 Markdown sports-science documents cached in Tier-1 Radix prefix
+├── rag_corpus/injuries/            # 40 colloquial-enriched clinical musculoskeletal protocols
+├── raw_data/exercises.json         # Canonical 876-exercise mechanical dataset
+├── Dockerfile                      # Production CUDA 13.2 + cuDNN 9 + PyTorch 2.15 gateway container image
+├── docker-compose.yml              # Multi-profile orchestrator (gateway-only, local-8gb, cloud-24gb)
+└── deploy_modal.py                 # Serverless multi-SKU GPU infrastructure & CI/CD verification functions
 ```
-
----
-
-## Reproduction & Serving Guide
-
-### Option A: Cloud GPU Serving (Kaggle / Colab T4)
-
-Open [`notebooks/serve_backend.ipynb`](notebooks/serve_backend.ipynb) on a GPU runtime (Nvidia Tesla T4) and execute the 5-cell lifecycle:
-1. **Cell 1 (Sanitation & Pinning):** Removes conflicting packages, disables telemetry, and installs pinned versions of `vllm`, `bitsandbytes`, `sentence-transformers`, `fastapi`, and `pyngrok`.
-2. **Cell 2 (Git Sync & Pre-Flight Assertions):** Runs `git reset --hard origin/main`, validates required file paths, and pre-caches `bge-base-en-v1.5` on CPU.
-3. **Cell 3 (vLLM Engine):** Starts `vllm.entrypoints.openai.api_server` on port 8001 with BitsAndBytes 4-bit quantization, binds the LoRA adapter, and enables prefix caching.
-4. **Cell 4 (FastAPI Gateway):** Starts `backend.server` on port 8000, indexing all 876 catalog movements into memory.
-5. **Cell 5 (Ngrok Tunnel & Smoke Test):** Connects the tunnel to your static Anycast domain and runs an end-to-end clinical verification request.
-
-Copy the resulting `https://...ngrok-free.app` URL into `client/src/api/coachApi.ts`.
-
----
-
-### Option B: Local CUDA Workstation Serving
-
-To serve from a local Linux workstation or Windows WSL2 environment:
-
-```bash
-# 1. Install dependencies
-pip install -r requirements.txt
-
-# 2. Launch orchestrator (auto-downloads LoRA weights from Hugging Face if not present)
-python scripts/serve_local.py --gpu-util 0.85 --max-model-len 16384
-```
-
-**Hardware Profiles:**
-* **8 GB – 12 GB VRAM (RTX 3060 / 4060):** `--max-model-len 4096 --gpu-util 0.75`
-* **16 GB VRAM (Tesla T4 / RTX 4080):** `--max-model-len 16384 --gpu-util 0.85`
-* **24 GB+ VRAM (RTX 3090 / 4090):** `--max-model-len 32768 --gpu-util 0.90`
-
-**Networking Modes:**
-* **Local LAN Mode (Default):** Prints host LAN IP for physical device testing on local Wi-Fi and routes `10.0.2.2` for Android Studio emulators.
-* **Public Anycast Mode (`--ngrok`):** Opens a secure reverse tunnel for remote testing across networks where AP client isolation is enabled:
-  ```bash
-  python scripts/serve_local.py --ngrok
-  ```
-
----
-
-### Mobile Client Execution
-
-#### Option 1: Standalone Android APK (Recommended)
-Download and install the pre-compiled binary directly on an Android device:
-* Download `ai-gym-coach.apk` from the [GitHub Releases](https://github.com/AhmedH32/ai-gym-coach/releases) page.
-* The release APK embeds its own pre-compiled Hermes runtime and runs without Expo Go or Node.js.
-
-#### Option 2: Local Developer Run (Android Emulator / Studio)
-To inspect or run the client source locally:
-
-```bash
-cd client
-npm install
-
-# Launch on connected Android Studio Emulator
-npx expo run:android
-```
-
----
-
-## Verification Suite & Test Coverage
-
-The test suite in `tests/` verifies the safety contracts, routing behavior, and catalog search logic:
-
-```bash
-pytest tests/ -v
-```
-
-1. **`tests/test_rag_tools.py` (9 Tests):** Validates the $\tau = 0.38$ distance threshold, tests rejection of medical emergencies and non-fitness queries, and checks catalog filter constraints.
-2. **`tests/test_rag_retrieval.py` (6 Tests):** Validates canonical injury card integrity (40 cards), differential diagnosis resolution, and SHA-256 ingestion idempotency.
-3. **`tests/test_agent_orchestrator.py`:** Validates delimiter parsing, custom rehab demotion (`existsInCatalog: false`), and `OrchestratorResponse` Pydantic schemas.
-4. **`tests/test_exercise_catalog.py`:** Tests candidate ranking by muscle group and enforces negative mechanical exclusion rules.
-5. **`tests/test_analytics.py`:** Tests training volume landmark tracking and recovery scoring in `backend/analytics_engine/recovery.py`.
 
 ---
 
 ## Contributors
 
-Built as an end-to-end engineering collaboration by:
-
-* **[Ahmed Hassan](https://github.com/AhmedH32)** — Core Architecture, Machine Learning Systems & Orchestration
+* **[Ahmed Hassan](https://github.com/AhmedH32)** — Lead ML Systems Architect, Compound AI Orchestration, GPU Inference Optimization & MLOps Infrastructure
 * **[Ahmed Samy](https://github.com/Ahmedsamy2003)** — Synthetic Dataset Pipelines & Baseline Tooling
-* **[Mohamed Salem](https://github.com/ms467154-coder)** —  Mobile Client Engineering & Clinical Knowledge Base
-
----
+* **[Mohamed Salem](https://github.com/ms467154-coder)** — Mobile Client Engineering & Clinical Knowledge Base
 
 ## License
 

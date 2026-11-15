@@ -1,0 +1,29 @@
+# .dockerignore
+.git
+.github
+.vscode
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# Exclude React Native client, notebooks & local caches from backend build context
+client/
+docs/
+notebooks/
+scripts/
+data/
+chroma_db/
+deploy_modal.py
+
+# Ignore root Markdown docs while explicitly whitelisting clinical & prompt assets
+*.md
+!rag_corpus/**/*.md
+!prompt_assets/**/*.md
+
+# Exclude legacy fine-tuning adapters & datasets from container build context
+ml_pipeline/
+raw_data/**/*.webp

@@ -28,10 +28,11 @@ on:
 jobs:
   ml_ci_cd_pipeline:
     name: Validate, Verify Hardware SLOs & Deploy Modal Gateway
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
       MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
 
     steps:
       - name: Checkout Repository (Fetch HEAD & HEAD~1 for Diff Detection)

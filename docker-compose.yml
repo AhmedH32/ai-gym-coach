@@ -1,0 +1,183 @@
+# docker-compose.yml
+services:
+  # ============================================================================
+  # PROFILE 1: `gateway-only` (Fast Local GPU Verification on 8GB RTX 4060)
+  # Command: docker compose --profile gateway-only up --build
+  # ============================================================================
+  coach-gateway-standalone:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ai-gym-coach-gateway:v2.5
+    container_name: ai-gym-coach-gateway-standalone
+    profiles: ["gateway-only"]
+    ports:
+      - "8000:8000"
+    environment:
+      - COPROCESSOR_DEVICE=cuda:0
+      - VLLM_BASE_URL=${VLLM_BASE_URL:-http://127.0.0.1:8001/v1}
+      - BASE_MODEL_NAME=Qwen/Qwen2.5-7B-Instruct-AWQ
+      - HF_HOME=/data/hf_cache
+      - CHROMA_DB_DIR=/data/chroma_db
+      - HF_HUB_DISABLE_XET=1
+      - HF_HUB_ETAG_TIMEOUT=30
+      - HF_HUB_DOWNLOAD_TIMEOUT=60
+    volumes:
+      - gym_coach_data:/data
+    ipc: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # ============================================================================
+  # PROFILE 2: `local-8gb` (Full Stack on 8GB Consumer GPU: CPU Router + GPU LLM)
+  # Command: docker compose --profile local-8gb up --build
+  # ============================================================================
+  vllm-engine-8gb:
+    image: vllm/vllm-openai:latest
+    container_name: ai-gym-coach-vllm-8gb
+    profiles: ["local-8gb"]
+    ports:
+      - "8001:8001"
+    environment:
+      - HF_HOME=/data/hf_cache
+      - VLLM_USE_FLASHINFER_SAMPLER=0
+      - HF_HUB_DISABLE_XET=1
+      - HF_HUB_ETAG_TIMEOUT=30
+      - HF_HUB_DOWNLOAD_TIMEOUT=60
+    volumes:
+      - gym_coach_data:/data
+    ipc: host
+    command: >
+      --model Qwen/Qwen2.5-7B-Instruct-AWQ
+      --quantization awq_marlin
+      --dtype half
+      --enforce-eager
+      --max-model-len 4096
+      --gpu-memory-utilization 0.82
+      --enable-prefix-caching
+      --max-num-seqs 2
+      --port 8001
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:8001/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  coach-gateway-8gb:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ai-gym-coach-gateway:v2.5
+    container_name: ai-gym-coach-gateway-8gb
+    profiles: ["local-8gb"]
+    ports:
+      - "8000:8000"
+    environment:
+      - COPROCESSOR_DEVICE=cpu
+      - VLLM_BASE_URL=http://vllm-engine-8gb:8001/v1
+      - BASE_MODEL_NAME=Qwen/Qwen2.5-7B-Instruct-AWQ
+      - HF_HOME=/data/hf_cache
+      - CHROMA_DB_DIR=/data/chroma_db
+      - HF_HUB_DISABLE_XET=1
+      - HF_HUB_ETAG_TIMEOUT=30
+      - HF_HUB_DOWNLOAD_TIMEOUT=60
+    volumes:
+      - gym_coach_data:/data
+    ipc: host
+    depends_on:
+      vllm-engine-8gb:
+        condition: service_healthy
+
+  # ============================================================================
+  # PROFILE 3: `cloud-24gb` (Production 24GB+ L4 / A10G / L40S Full GPU Stack)
+  # Command: docker compose --profile cloud-24gb up --build -d
+  # ============================================================================
+  vllm-engine-24gb:
+    image: vllm/vllm-openai:latest
+    container_name: ai-gym-coach-vllm-24gb
+    profiles: ["cloud-24gb"]
+    ports:
+      - "8001:8001"
+    environment:
+      - HF_HOME=/data/hf_cache
+      - VLLM_USE_FLASHINFER_SAMPLER=0
+      - HF_HUB_DISABLE_XET=1
+      - HF_HUB_ETAG_TIMEOUT=30
+      - HF_HUB_DOWNLOAD_TIMEOUT=60
+    volumes:
+      - gym_coach_data:/data
+    ipc: host
+    command: >
+      --model Qwen/Qwen2.5-7B-Instruct-AWQ
+      --quantization awq_marlin
+      --safetensors-load-strategy prefetch
+      --dtype half
+      --max-model-len 8192
+      --gpu-memory-utilization 0.75
+      --enable-prefix-caching
+      --max-num-seqs 16
+      --port 8001
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://127.0.0.1:8001/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  coach-gateway-24gb:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ai-gym-coach-gateway:v2.5
+    container_name: ai-gym-coach-gateway-24gb
+    profiles: ["cloud-24gb"]
+    ports:
+      - "8000:8000"
+    environment:
+      - COPROCESSOR_DEVICE=cuda:0
+      - VLLM_BASE_URL=http://vllm-engine-24gb:8001/v1
+      - BASE_MODEL_NAME=Qwen/Qwen2.5-7B-Instruct-AWQ
+      - HF_HOME=/data/hf_cache
+      - CHROMA_DB_DIR=/data/chroma_db
+      - HF_HUB_DISABLE_XET=1
+      - HF_HUB_ETAG_TIMEOUT=30
+      - HF_HUB_DOWNLOAD_TIMEOUT=60
+    volumes:
+      - gym_coach_data:/data
+    ipc: host
+    depends_on:
+      vllm-engine-24gb:
+        condition: service_healthy
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+volumes:
+  gym_coach_data:
+    name: ai-gym-coach-data

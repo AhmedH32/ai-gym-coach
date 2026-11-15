@@ -36,22 +36,18 @@ class WorkoutItem(BaseModel):
     def coerce_llm_types(cls, data: Any) -> Any:
         if not isinstance(data, dict):
             return data
-        # Coerce reps to string
         if "reps" in data and data["reps"] is not None:
             data["reps"] = str(data["reps"]).strip()
-        # Coerce sets to integer
         if "sets" in data and data["sets"] is not None:
             try:
                 data["sets"] = int(float(str(data["sets"]).split("-")[0].strip()))
             except Exception:
                 data["sets"] = 3
-        # Coerce targetRpe to integer
         if "targetRpe" in data and data["targetRpe"] is not None:
             try:
                 data["targetRpe"] = int(float(str(data["targetRpe"]).split("-")[0].strip()))
             except Exception:
                 data["targetRpe"] = 7
-        # Coerce single string instructions to list
         if "customInstructions" in data and isinstance(data["customInstructions"], str):
             data["customInstructions"] = [data["customInstructions"]]
         return data
@@ -105,20 +101,20 @@ CONTRASTIVE_FEW_SHOTS = [
             "**Mechanism of Irritation:** Overload in patellar tendon provoked by deep knee flexion.\n"
             "## Absolute Contraindications: Deep knees-over-toes squats, plyometrics.\n"
             "## Biomechanical Modifications: Maintain vertical shin angle.\n"
-            "## Recommended Substitutions: Spanish squats, Romanian deadlifts.\n\n"
+            "## Recommended Substitutions: Spanish squats, Romanian deadlifts, Glute bridges, Seated hamstring curls.\n\n"
             "Athlete Query: 'Tendon below my kneecap is barking on deep squats, but I have dumbbells. Can I still train legs?'\n\n"
-            "EXECUTION DIRECTIVE: Prescribe a clinical explanation in Markdown followed by a 3-exercise custom rehab workout inside <!-- WORKOUT_PAYLOAD_START --> and <!-- WORKOUT_PAYLOAD_END -->. All items must have existsInCatalog: false, catalogId: null."
+            "EXECUTION DIRECTIVE: Prescribe a clinical explanation in Markdown followed by a 4-to-6 exercise custom rehab workout inside <!-- WORKOUT_PAYLOAD_START --> and <!-- WORKOUT_PAYLOAD_END -->. All items must have existsInCatalog: false, catalogId: null."
         ),
     },
     {
         "role": "assistant",
         "content": (
-            "Your patellar tendon is reacting to high compressive shear forces at deep knee angles. We will eliminate deep squats and perform tendon-desensitizing isometrics and posterior chain hinges.\n\n"
+            "Your patellar tendon is reacting to high compressive shear forces at deep knee angles. We will eliminate deep knee flexion over the toes and focus on tendon-desensitizing isometrics alongside posterior-chain dominant loading.\n\n"
             "<!-- WORKOUT_PAYLOAD_START -->\n"
             "{\n"
-            '  "title": "Patellar-Sparing Dumbbell Session",\n'
-            '  "targetFocus": "Lower Body Tendon Rehab",\n'
-            '  "estimatedMinutes": 40,\n'
+            '  "title": "Patellar-Sparing Dumbbell Leg Session",\n'
+            '  "targetFocus": "Lower Body Tendon Rehab & Posterior Chain",\n'
+            '  "estimatedMinutes": 45,\n'
             '  "items": [\n'
             "    {\n"
             '      "name": "Spanish Squat Isometric Hold",\n'
@@ -129,20 +125,44 @@ CONTRASTIVE_FEW_SHOTS = [
             '      "reps": "45s hold",\n'
             '      "targetRpe": 6,\n'
             '      "tempo": "Static",\n'
-            '      "customInstructions": ["Sit back to 60 degrees knee flexion with strap behind knees.", "Maintain vertical shins."],\n'
-            '      "coachingCue": "Do not let knees drift forward."\n'
+            '      "customInstructions": ["Sit back to 60 degrees knee flexion with a heavy strap anchored behind knees.", "Keep shins strictly vertical."],\n'
+            '      "coachingCue": "Do not let knees drift forward past ankles."\n'
             "    },\n"
             "    {\n"
             '      "name": "Dumbbell Romanian Deadlift",\n'
             '      "existsInCatalog": false,\n'
             '      "catalogId": null,\n'
             '      "category": "compound",\n'
+            '      "sets": 4,\n'
+            '      "reps": "8-10",\n'
+            '      "targetRpe": 7,\n'
+            '      "tempo": "3-1-1-0",\n'
+            '      "customInstructions": ["Hinge at the hips with a soft 15-degree knee bend.", "Lower dumbbells to mid-shin while keeping lats locked."],\n'
+            '      "coachingCue": "Push hips straight back to load hamstrings without knee shear."\n'
+            "    },\n"
+            "    {\n"
+            '      "name": "Dumbbell Hip Thrust",\n'
+            '      "existsInCatalog": false,\n'
+            '      "catalogId": null,\n'
+            '      "category": "compound",\n'
             '      "sets": 3,\n'
             '      "reps": "10-12",\n'
-            '      "targetRpe": 7,\n'
-            '      "tempo": "3-0-1-0",\n'
-            '      "customInstructions": ["Hinge at hips with soft knees.", "Lower dumbbells to mid-shin."],\n'
-            '      "coachingCue": "Keep shins vertical to spare the patellar tendon."\n'
+            '      "targetRpe": 8,\n'
+            '      "tempo": "2-1-1-1",\n'
+            '      "customInstructions": ["Rest upper back on bench with dumbbell across hips.", "Drive through heels to full hip extension."],\n'
+            '      "coachingCue": "Maintain a 90-degree shin angle at lockout."\n'
+            "    },\n"
+            "    {\n"
+            '      "name": "Standing Dumbbell Calf Raise",\n'
+            '      "existsInCatalog": false,\n'
+            '      "catalogId": null,\n'
+            '      "category": "accessory",\n'
+            '      "sets": 3,\n'
+            '      "reps": "12-15",\n'
+            '      "targetRpe": 8,\n'
+            '      "tempo": "2-1-1-1",\n'
+            '      "customInstructions": ["Stand on a flat surface holding dumbbells at sides.", "Press onto balls of feet with knees locked."],\n'
+            '      "coachingCue": "Pause for 1 second at peak ankle plantarflexion."\n'
             "    }\n"
             "  ]\n"
             "}\n"
@@ -177,32 +197,49 @@ CONTRASTIVE_FEW_SHOTS = [
             "Target Muscles: back, biceps\n"
             "Equipment Available: dumbbell\n"
             "Candidate Catalog Exercises:\n"
-            '[\n  {"catalogId": "Bent_Over_Two-Dumbbell_Row", "name": "Bent Over Two-Dumbbell Row"},\n  {"catalogId": "Incline_Dumbbell_Curl", "name": "Incline Dumbbell Curl"}\n]\n\n'
+            '[\n'
+            '  {"catalogId": "Bent_Over_Two-Dumbbell_Row", "name": "Bent Over Two-Dumbbell Row"},\n'
+            '  {"catalogId": "One-Arm_Dumbbell_Row", "name": "One-Arm Dumbbell Row"},\n'
+            '  {"catalogId": "Incline_Dumbbell_Curl", "name": "Incline Dumbbell Curl"},\n'
+            '  {"catalogId": "Hammer_Curls", "name": "Hammer Curls"}\n'
+            ']\n\n'
             "Athlete Query: 'Build me a back and biceps workout with dumbbells.'\n\n"
-            "EXECUTION DIRECTIVE: Prescribe a coaching rationale in Markdown followed by a 2-to-3 exercise routine using the verified catalogId values above (existsInCatalog: true) inside <!-- WORKOUT_PAYLOAD_START --> and <!-- WORKOUT_PAYLOAD_END -->."
+            "EXECUTION DIRECTIVE: Prescribe a coaching rationale in Markdown followed by a 4-to-6 exercise routine using the verified catalogId values above (existsInCatalog: true) inside <!-- WORKOUT_PAYLOAD_START --> and <!-- WORKOUT_PAYLOAD_END -->."
         ),
     },
     {
         "role": "assistant",
         "content": (
-            "Here is a targeted dumbbell pull session hitting the lats and elbow flexors with optimal resistance curves.\n\n"
+            "Here is a complete dumbbell pull session targeting upper-back thickness, lat sweep, and both the long head and brachialis of the elbow flexors.\n\n"
             "<!-- WORKOUT_PAYLOAD_START -->\n"
             "{\n"
             '  "title": "Dumbbell Back & Biceps Hypertrophy",\n'
             '  "targetFocus": "Back & Biceps",\n'
-            '  "estimatedMinutes": 40,\n'
+            '  "estimatedMinutes": 50,\n'
             '  "items": [\n'
             "    {\n"
             '      "name": "Bent Over Two-Dumbbell Row",\n'
             '      "existsInCatalog": true,\n'
             '      "catalogId": "Bent_Over_Two-Dumbbell_Row",\n'
             '      "category": "compound",\n'
-            '      "sets": 3,\n'
+            '      "sets": 4,\n'
             '      "reps": "8-10",\n'
             '      "targetRpe": 8,\n'
+            '      "tempo": "3-0-1-1",\n'
+            '      "customInstructions": ["Hinge torso to 45 degrees with neutral spine.", "Row dumbbells toward hip pockets."],\n'
+            '      "coachingCue": "Drive elbows back past ribs and squeeze scapulae."\n'
+            "    },\n"
+            "    {\n"
+            '      "name": "One-Arm Dumbbell Row",\n'
+            '      "existsInCatalog": true,\n'
+            '      "catalogId": "One-Arm_Dumbbell_Row",\n'
+            '      "category": "compound",\n'
+            '      "sets": 3,\n'
+            '      "reps": "10-12",\n'
+            '      "targetRpe": 8,\n'
             '      "tempo": "3-0-1-0",\n'
-            '      "customInstructions": ["Hinge torso to 45 degrees.", "Row dumbbells toward hip pockets."],\n'
-            '      "coachingCue": "Drive elbows back rather than pulling with wrists."\n'
+            '      "customInstructions": ["Brace non-working hand on bench.", "Pull dumbbell in an arc toward your hip."],\n'
+            '      "coachingCue": "Allow a controlled lat stretch at the bottom."\n'
             "    },\n"
             "    {\n"
             '      "name": "Incline Dumbbell Curl",\n'
@@ -213,8 +250,20 @@ CONTRASTIVE_FEW_SHOTS = [
             '      "reps": "10-12",\n'
             '      "targetRpe": 8,\n'
             '      "tempo": "3-0-1-1",\n'
-            '      "customInstructions": ["Set bench to 60 degrees.", "Curl dumbbells while keeping upper arms fixed."],\n'
-            '      "coachingCue": "Maximize stretch at the bottom without swinging."\n'
+            '      "customInstructions": ["Set bench to 60 degrees.", "Curl dumbbells while keeping upper arms pinned behind torso."],\n'
+            '      "coachingCue": "Maximize long-head stretch at the bottom."\n'
+            "    },\n"
+            "    {\n"
+            '      "name": "Hammer Curls",\n'
+            '      "existsInCatalog": true,\n'
+            '      "catalogId": "Hammer_Curls",\n'
+            '      "category": "accessory",\n'
+            '      "sets": 3,\n'
+            '      "reps": "10-12",\n'
+            '      "targetRpe": 8,\n'
+            '      "tempo": "2-0-1-1",\n'
+            '      "customInstructions": ["Hold dumbbells with neutral palms-facing-in grip.", "Curl up without swinging torso."],\n'
+            '      "coachingCue": "Keep wrists rigid to target the brachialis and brachioradialis."\n'
             "    }\n"
             "  ]\n"
             "}\n"
@@ -247,8 +296,6 @@ class GymCoachOrchestrator:
         self.adapter_model = os.environ.get("ADAPTER_NAME", adapter_model_name)
         self.project_root = project_root or Path(__file__).resolve().parent.parent.parent
 
-        # Stage-decoupled concurrency semaphores (Triton instance_group pattern):
-        # Bounds concurrent GPU activation graphs on cuda:0 while pipelining CPU/GPU work.
         self._router_sem = asyncio.Semaphore(
             int(os.environ.get("ROUTER_CONCURRENCY", str(router_concurrency)))
         )
@@ -293,7 +340,7 @@ class GymCoachOrchestrator:
             "   - When instructed to prescribe a workout, output a valid JSON object matching the WorkoutProposal schema wrapped inside `<!-- WORKOUT_PAYLOAD_START -->` and `<!-- WORKOUT_PAYLOAD_END -->`.\n"
             "   - When instructed NOT to prescribe a workout, emit Markdown ONLY and NEVER output the delimiters.\n"
             "3. Exercise Prescription Standards:\n"
-            "   - Prescribe 2 to 4 exercises per session with concise 1-sentence customInstructions.\n"
+            "   - Prescribe 4 to 6 complete exercises per session (covering primary compounds, secondary accessories, and targeted rehab/stabilizer work) with concise 1-sentence customInstructions.\n"
             "   - For CLINICAL sessions: existsInCatalog=false, catalogId=null.\n"
             "   - For CATALOG sessions: existsInCatalog=true, catalogId=verified ID from candidates."
         )
@@ -433,7 +480,6 @@ class GymCoachOrchestrator:
         rag_latency_ms = 0.0
 
         if is_clinical:
-            # Bounded Two-Stage Clinical RAG (max 2 in-flight on GPU)
             async with self._rag_sem:
                 medical_res = await asyncio.to_thread(self.tools.search_medical_db, user_query)
             rag_latency_ms = medical_res.latency_ms
@@ -467,7 +513,7 @@ class GymCoachOrchestrator:
             if decision.wants_workout_program:
                 directive = (
                     "EXECUTION DIRECTIVE: Prescribe a concise coaching explanation in Markdown, "
-                    "then append a 2-to-3 exercise custom rehab workout routine inside "
+                    "then append a 4-to-6 exercise custom rehab workout routine inside "
                     "<!-- WORKOUT_PAYLOAD_START --> and <!-- WORKOUT_PAYLOAD_END -->. "
                     "All items MUST set existsInCatalog: false, catalogId: null."
                 )
@@ -498,7 +544,7 @@ class GymCoachOrchestrator:
                 muscle=decision.catalog_muscle_arg,
                 equipment=decision.catalog_equipment_arg,
                 exclude_mechanics=decision.catalog_exclude_arg,
-                limit=5,
+                limit=8,
             )
             rag_latency_ms = catalog_res.latency_ms
             candidate_list = [
@@ -506,7 +552,7 @@ class GymCoachOrchestrator:
                     "catalogId": cid,
                     "name": self.catalog_lookup.get(cid, {}).get("name", cid),
                 }
-                for cid in catalog_res.matched_ids[:5]
+                for cid in catalog_res.matched_ids[:8]
             ]
             dynamic_turn_prompt = (
                 f"Catalog Search Results:\n"
@@ -515,7 +561,7 @@ class GymCoachOrchestrator:
                 f"Candidate Catalog Exercises:\n{json.dumps(candidate_list, indent=2)}\n\n"
                 f"Athlete Query: '{user_query}'\n\n"
                 f"EXECUTION DIRECTIVE: Write a concise coaching rationale in Markdown, "
-                f"then append a 2-to-3 exercise workout using the verified catalogId values above (existsInCatalog: true) "
+                f"then append a 4-to-6 exercise workout using the verified catalogId values above (existsInCatalog: true) "
                 f"inside <!-- WORKOUT_PAYLOAD_START --> and <!-- WORKOUT_PAYLOAD_END -->."
             )
             max_gen_tokens = 1024
