@@ -20,11 +20,15 @@ volume = modal.Volume.from_name("ai-gym-coach-volume", create_if_missing=True)
 
 # Kept byte-for-byte identical to hit cached image im-ESctTbUlf0izFHFUHSOCtO (0s build)
 image = (
-    modal.Image.debian_slim(python_version="3.11")
+    modal.Image.from_registry(
+        "nvidia/cuda:13.0.1-devel-ubuntu24.04",
+        add_python="3.11",
+    )
+    .entrypoint([])  # Clear /opt/nvidia/nvidia_entrypoint.sh verbose banner
     .apt_install("git", "curl")
     .uv_pip_install(
-        "vllm>=0.6.3",
-        "torch>=2.4.0",
+        "vllm==0.34.0",
+        "torch==2.14.0",
         "transformers>=5.0.0",
         "sentence-transformers>=3.1.0",
         "chromadb>=0.5.5",
@@ -35,6 +39,7 @@ image = (
         "numpy>=1.26.0",
     )
     .env({
+        "CUDA_HOME": "/usr/local/cuda",
         "HF_HOME": HF_CACHE_DIR,
         "VLLM_CACHE_ROOT": VLLM_CACHE_DIR,
         "PYTORCH_CUDA_ALLOC_CONF": "expandable_segments:True",
@@ -52,6 +57,18 @@ app = modal.App(APP_NAME, image=image)
 
 
 def _build_vllm_runtime_env() -> dict[str, str]:
+    """
+    Configures the isolated environment for the vLLM subprocess:
+      1. Strips VLLM_BASE_URL so vLLM's internal env parser does not emit warnings.
+      2. Disables the FlashInfer top-k/top-p sampler JIT (uses PyTorch-native pre-compiled
+         CUDA sampler to prevent 20-45s cross-architecture sm_86/sm_89 JIT stalls at batch <= 16).
+      3. Directs any FlashInfer/Triton workspace caches onto the persistent Modal Volume.
+    """
+    env = os.environ.copy()
+    env.pop("VLLM_BASE_URL", None)
+    env["VLLM_USE_FLASHINFER_SAMPLER"] = "0"
+    env["FLASHINFER_WORKSPACE_BASE"] = f"{VLLM_CACHE_DIR}/flashinfer"
+    return env
     """
     Configures the isolated environment for the vLLM subprocess:
       1. Disables the FlashInfer top-k/top-p sampler JIT (uses native pre-compiled CUDA sampler).
@@ -185,12 +202,23 @@ def verify_system_slos() -> dict:
     import statistics
     import httpx
     import torch
-
+    import re
+    
     sys.path.insert(0, "/root/app")
     volume.reload()
 
     gpu_name = torch.cuda.get_device_name(0)
     sm_cap = torch.cuda.get_device_capability(0)
+    nvcc_out = subprocess.check_output(["nvcc", "--version"], text=True)
+    nvcc_match = re.search(r"release (\d+\.\d+)", nvcc_out)
+    nvcc_ver = nvcc_match.group(1) if nvcc_match else "unknown"
+    torch_cuda_ver = torch.version.cuda or "unknown"
+    print(f"🔧 [CUDA ABI Check] nvcc={nvcc_ver} | torch.version.cuda={torch_cuda_ver}")
+    if nvcc_ver != torch_cuda_ver:
+        raise RuntimeError(
+            f"SLO GATE FAILED: CUDA toolkit/runtime skew detected "
+            f"(nvcc={nvcc_ver} != torch.version.cuda={torch_cuda_ver})"
+        )
     # L4 has a 300 GB/s memory bus vs 600 GB/s (A10G) and 864 GB/s (L40S)
     is_bandwidth_constrained_l4 = "L4" in gpu_name and "L40" not in gpu_name
     max_allowed_itl_ms = 30.0 if is_bandwidth_constrained_l4 else 18.0
